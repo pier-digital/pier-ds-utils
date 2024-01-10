@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "pier-ds-utils"
+version = "0.1.0"
+description = "The pier_ds_utils is an internal library used by data science teams to avoid code duplication in common tasks."
+authors = ["caiodallaqua <caio.leal@pier.digital>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+setuptools = "^69.0.3"
+numpy = "^1.26.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
