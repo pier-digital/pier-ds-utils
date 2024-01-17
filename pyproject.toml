@@ -12,6 +12,8 @@ scikit-learn = "*"
 pandas = "*"
 statsmodels = "*"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
 
 [build-system]
 requires = ["poetry-core"]
