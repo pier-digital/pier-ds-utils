@@ -6,7 +6,7 @@ authors = ["caiodallaqua <caio.leal@pier.digital>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<=3.11"
+python = ">=3.8,<3.11"
 setuptools = "^69.0.3"
 scikit-learn = "*"
 pandas = "*"
