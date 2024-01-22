@@ -1,6 +1,12 @@
 name: Checks
 
 on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.png'
+      - '**/*.json'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:

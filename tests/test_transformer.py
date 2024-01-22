@@ -1,9 +1,9 @@
 import pandas as pd
-from pier_ds_utils import transformer
+import pier_ds_utils as ds
 
 
 def test_custom_discrete_categorizer():
-    categorizer = transformer.CustomDiscreteCategorizer(
+    categorizer = ds.transformer.CustomDiscreteCategorizer(
         column='gender',
         categories=[
             ['M', 'm', 'Masculino', 'masculino'],
@@ -53,7 +53,7 @@ def test_custom_discrete_categorizer():
 
 
 def test_custom_interval_categorizer():
-    categorizer = transformer.CustomIntervalCategorizer(
+    categorizer = ds.transformer.CustomIntervalCategorizer(
         column='price',
         intervals=[
             (498, 2700),
@@ -99,10 +99,10 @@ def test_custom_interval_categorizer():
     ]
 
 def test_custom_interval_categorizer_by_category():
-    categorizer = transformer.CustomIntervalCategorizerByCategory(
+    categorizer = ds.transformer.CustomIntervalCategorizerByCategory(
         category_column='brand',
         interval_categorizers={
-            'apple': transformer.CustomIntervalCategorizer(
+            'apple': ds.transformer.CustomIntervalCategorizer(
                 column='price',
                 intervals=[
                     (498, 2700),
@@ -112,7 +112,7 @@ def test_custom_interval_categorizer_by_category():
                 ],
                 labels=['fx1_apple', 'fx2_apple', 'fx3_apple', 'fx4_apple'],
             ),
-            'samsung': transformer.CustomIntervalCategorizer(
+            'samsung': ds.transformer.CustomIntervalCategorizer(
                 column='price',
                 intervals=[
                     (189, 1500),
@@ -121,7 +121,7 @@ def test_custom_interval_categorizer_by_category():
                 labels=['fx1_samsung', 'fx2_samsung'],
             )
         },
-        default_categorizer=transformer.CustomIntervalCategorizer(
+        default_categorizer=ds.transformer.CustomIntervalCategorizer(
                 column='price',
                 intervals=[(240, 5260)],
                 labels=['fx_outras_marcas'],
