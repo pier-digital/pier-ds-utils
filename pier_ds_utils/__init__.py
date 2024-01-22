@@ -1,1 +1,1 @@
-__all__ = ['estimator', 'transformer']
+__all__ = ['pier_ds_utils', 'estimator', 'transformer']
