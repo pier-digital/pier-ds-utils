@@ -2,6 +2,8 @@
 
 A toolkit for day-to-day DS tasks such as using custom transformers or estimators.
 
+Found a bug or have a feature request? [Open an issue](https://github.com/pier-digital/pier-ds-utils/issues/new/choose)!
+
 ## Usage
 
 ```python
@@ -21,14 +23,13 @@ predict_proba_selector = ds.estimator.PredictProbaSelector(...)
 
 ```bash
 # pip
-pip install git+https://github.com/pier-digital/pier-ds-utils.git@_version_
+pip install git+https://github.com/pier-digital/pier-ds-utils@_version_
 
 # poetry
-poetry add git+https://github.com/pier-digital/pier-ds-utils.git@_version_
+poetry add git+https://github.com/pier-digital/pier-ds-utils@_version_
 
 # conda (must be in the virtual environment)
-pip install git+https://github.com/pier-digital/pier-ds-utils.git@_version_
+pip install git+https://github.com/pier-digital/pier-ds-utils@_version_
 ```
 
 Replace `_version_` by the specific version you want to use. You can find them [here](https://github.com/pier-digital/pier-ds-utils/tags).
-
