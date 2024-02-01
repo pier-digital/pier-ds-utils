@@ -171,8 +171,8 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
 
     def get_params(self, deep: bool = True) -> dict:
         return {
-            'intervals': self.labels_,
-            'labels': self.intervals_,
+            'intervals': self.intervals_,
+            'labels': self.labels_,
             'default_value': self.default_value_,
             'output_column': self.output_column_,
             'column': self.column_,
