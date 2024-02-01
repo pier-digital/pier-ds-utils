@@ -52,6 +52,28 @@ def test_custom_discrete_categorizer():
     ]
 
 
+def test_custom_discrete_categorizer_get_params():
+    categories = [
+        ['M', 'm', 'Masculino', 'masculino'],
+        ['F', 'f', 'Feminino', 'feminino'],
+    ]
+    labels = ['M', 'F']
+    default_value = 'M'
+
+    categorizer = ds.transformer.CustomDiscreteCategorizer(
+        column='gender',
+        categories=categories,
+        labels=labels,
+        default_value=default_value,
+    )
+
+    params = categorizer.get_params()
+
+    assert params['categories'] == categories
+    assert params['labels'] == labels
+    assert params['default_value'] == default_value
+
+
 def test_custom_interval_categorizer():
     categorizer = ds.transformer.CustomIntervalCategorizer(
         column='price',
@@ -97,6 +119,36 @@ def test_custom_interval_categorizer():
         'fx_outras_marcas',
         'fx_outras_marcas',
     ]
+
+
+def test_custom_interval_categorizer_get_params():
+    column = 'price'
+    intervals = [
+        (498, 2700),
+        (2700, 3447.6),
+        (3447.6, 5592),
+        (5592, 13950),
+    ]
+    labels = ['fx1_apple', 'fx2_apple', 'fx3_apple', 'fx4_apple']
+    default_value = 'fx_outras_marcas'
+    output_column = 'price_fx'
+    
+    categorizer = ds.transformer.CustomIntervalCategorizer(
+        column=column,
+        intervals=intervals,
+        labels=labels,
+        default_value=default_value,
+        output_column=output_column,
+    )
+
+    params = categorizer.get_params()
+
+    assert params['column'] == column
+    assert params['intervals'] == intervals
+    assert params['labels'] == labels
+    assert params['default_value'] == default_value
+    assert params['output_column'] == output_column
+
 
 def test_custom_interval_categorizer_by_category():
     categorizer = ds.transformer.CustomIntervalCategorizerByCategory(
@@ -184,3 +236,45 @@ def test_custom_interval_categorizer_by_category():
         'fx_outras_marcas',
         'fx_outras_marcas',
     ]
+
+
+
+    category_column = 'brand'
+
+    intervals = [
+        (498, 2700),
+        (2700, 3447.6),
+        (3447.6, 5592),
+        (5592, 13950),
+    ]
+
+    labels = ['fx1_apple', 'fx2_apple', 'fx3_apple', 'fx4_apple']
+
+    categorizer = ds.transformer.CustomIntervalCategorizerByCategory(
+        category_column=category_column,
+        interval_categorizers={
+            'apple': ds.transformer.CustomIntervalCategorizer(
+                column='price',
+                intervals=intervals,
+                labels=labels,
+            ),
+            'samsung': ds.transformer.CustomIntervalCategorizer(
+                column='price',
+                intervals=[
+                    (189, 1500),
+                    (1500, 11340),
+                ],
+                labels=['fx1_samsung', 'fx2_samsung'],
+            )
+        },
+        default_categorizer=ds.transformer.CustomIntervalCategorizer(
+                column='price',
+                intervals=[(240, 5260)],
+                labels=['fx_outras_marcas'],
+        ),
+        output_column='price_fx',
+    )
+
+    params = categorizer.get_params()
+    print(params)
+    assert params['category_column'] == category_column
