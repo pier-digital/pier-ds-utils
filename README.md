@@ -22,17 +22,21 @@ predict_proba_selector = ds.estimator.PredictProbaSelector(...)
 ## Installation
 
 ```bash
-# pip
-pip install git+https://github.com/pier-digital/pier-ds-utils@_version_
+pip install pier-ds-utils
 
-# poetry
-poetry add git+https://github.com/pier-digital/pier-ds-utils@_version_
+# or
 
-# conda (must be in the virtual environment)
-pip install git+https://github.com/pier-digital/pier-ds-utils@_version_
+poetry add pier-ds-utils
 ```
 
-Replace `_version_` by the specific version you want to use. You can find them [here](https://github.com/pier-digital/pier-ds-utils/tags).
+For a specific [version](https://github.com/pier-digital/pier-ds-utils/releases):
+```bash
+pip install pier-ds-utils@_version_
+
+# or
+
+poetry add pier-ds-utils@_version_
+```
 
 ## Contributing
 
