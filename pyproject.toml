@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "pier-ds-utils"
-version = "0.2.2"
-description = "The pier_ds_utils is an internal library used by data science teams to avoid code duplication in common tasks."
-authors = ["caiodallaqua <caio.leal@pier.digital>"]
+version = "0.2.3"
+description = "A library for data science teams to avoid code duplication in common tasks involving scikit-learn transformers and estimators."
+authors = ["caiodallaqua <caio.leal@pier.digital>", "Gabriel Guarisa <gabriel.guarisa@pier.digital>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
