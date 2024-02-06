@@ -8,13 +8,13 @@ def test_glm_wrapper():
     assert wrapper is not None
 
     # Check attributes
-    assert hasattr(wrapper, 'os_factor')
-    assert hasattr(wrapper, 'init_params')
+    assert hasattr(wrapper, "os_factor")
+    assert hasattr(wrapper, "init_params")
 
     # Check methods
-    assert hasattr(wrapper, 'fit')
-    assert hasattr(wrapper, 'predict')
-    assert hasattr(wrapper, 'get_params')
+    assert hasattr(wrapper, "fit")
+    assert hasattr(wrapper, "predict")
+    assert hasattr(wrapper, "get_params")
 
 
 def test_predict_proba_selector():
@@ -25,10 +25,10 @@ def test_predict_proba_selector():
     assert selector is not None
 
     # Check attributes
-    assert hasattr(selector, 'model')
-    assert hasattr(selector, 'column')
+    assert hasattr(selector, "model")
+    assert hasattr(selector, "column")
 
     # Check methods
-    assert hasattr(selector, 'fit')
-    assert hasattr(selector, 'predict_proba')
-    assert hasattr(selector, 'get_params')
+    assert hasattr(selector, "fit")
+    assert hasattr(selector, "predict_proba")
+    assert hasattr(selector, "get_params")

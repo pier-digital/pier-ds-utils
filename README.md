@@ -33,3 +33,7 @@ pip install git+https://github.com/pier-digital/pier-ds-utils@_version_
 ```
 
 Replace `_version_` by the specific version you want to use. You can find them [here](https://github.com/pier-digital/pier-ds-utils/tags).
+
+## Contributing
+
+Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) first.

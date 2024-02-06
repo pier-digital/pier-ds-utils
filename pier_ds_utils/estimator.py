@@ -19,21 +19,21 @@ class GLMWrapper(BaseCustomTransformer):
     def get_params(self, deep=True):
         return {
             **self.init_params,
-            **{'add_constant': self._add_constant, 'os_factor': self.os_factor},
+            **{"add_constant": self._add_constant, "os_factor": self.os_factor},
         }
 
     def fit(self, X, y, **fit_params):
         if self._add_constant:
-            X['const'] = 1
+            X["const"] = 1
 
         self.model_ = sm.GLM(endog=y, exog=X, **self.init_params)
-        fit_method = fit_params.pop('fit_method', 'fit')
+        fit_method = fit_params.pop("fit_method", "fit")
         self.results_ = getattr(self.model_, fit_method)(**fit_params)
         return self
 
     def predict(self, X, **predict_params):
         if self._add_constant:
-            X['const'] = 1
+            X["const"] = 1
 
         return self.results_.predict(exog=X, **predict_params) * self.os_factor
 
@@ -55,6 +55,6 @@ class PredictProbaSelector(BaseCustomTransformer):
 
     def get_params(self, deep: bool = True) -> dict:
         return {
-            'model': self.model.get_params(deep=deep) if deep else self.model,
-            'column': self.column,
+            "model": self.model.get_params(deep=deep) if deep else self.model,
+            "column": self.column,
         }

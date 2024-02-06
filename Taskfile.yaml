@@ -1,0 +1,22 @@
+version: 3
+
+vars:
+  DECISIONS_DIR: docs/decisions
+
+tasks:
+  init:
+    desc: initializes the project
+    cmds:
+      - poetry install -n
+  tests:
+    desc: run automated tests
+    cmds:
+      - poetry run pytest tests | tee pytest-coverage.txt
+  check-formatting:
+    desc: checks formatting
+    cmds:
+      - poetry run ruff check .
+  formatting:
+    desc: formats the code
+    cmds:
+      - poetry run ruff format .

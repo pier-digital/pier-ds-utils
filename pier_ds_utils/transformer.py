@@ -6,7 +6,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class BaseCustomTransformer(BaseEstimator, TransformerMixin):
-    def set_output(self, transform: str = 'pandas') -> BaseEstimator:
+    def set_output(self, transform: str = "pandas") -> BaseEstimator:
         return self
 
 
@@ -19,7 +19,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
     ):
-        '''
+        """
         Transformer to categorize a column into custom categories.
 
         Parameters
@@ -34,15 +34,15 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
-        '''
+        """
         if len(categories) != len(labels):
             raise ValueError(
-                'Number of categories must be the same as number of labels'
+                "Number of categories must be the same as number of labels"
             )
 
         for category in categories:
             if not isinstance(category, list):
-                raise TypeError('Each category must be a list')
+                raise TypeError("Each category must be a list")
 
         self._column = column
         self._categories = categories
@@ -64,10 +64,10 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
 
     def get_params(self, deep: bool = True) -> dict:
         return {
-            'categories': self.categories_,
-            'labels': self.labels_,
-            'default_value': self._default_value,
-            'output_column': self._output_column,
+            "categories": self.categories_,
+            "labels": self.labels_,
+            "default_value": self._default_value,
+            "output_column": self._output_column,
         }
 
     def fit(self, X, y=None):
@@ -75,7 +75,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
 
     def transform(self, X):
         values = X[self._column].copy()
-        output = pd.Series(np.nan, index=X.index, dtype='object')
+        output = pd.Series(np.nan, index=X.index, dtype="object")
 
         for category, label in zip(self._categories, self._labels):
             output.loc[values.isin(category)] = label
@@ -98,7 +98,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
     ):
-        '''
+        """
         Custom transformer to categorize a numeric column into intervals.
 
         Parameters
@@ -115,25 +115,25 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
-        '''
+        """
         if len(intervals) != len(labels):
-            raise ValueError('Number of intervals must be the same as number of labels')
+            raise ValueError("Number of intervals must be the same as number of labels")
 
         for interval in intervals:
             if not isinstance(interval, tuple):
-                raise TypeError('Each interval must be a tuple')
+                raise TypeError("Each interval must be a tuple")
 
             if len(interval) != 2:
-                raise ValueError('Each interval must have two elements')
+                raise ValueError("Each interval must have two elements")
 
             if not isinstance(interval[0], (int, float)) or not isinstance(
                 interval[1], (int, float)
             ):
-                raise TypeError('Each interval element must be a number')
+                raise TypeError("Each interval element must be a number")
 
             if interval[0] >= interval[1]:
                 raise ValueError(
-                    'Each interval must have the first element smaller than the second'
+                    "Each interval must have the first element smaller than the second"
                 )
 
         self._column = column
@@ -171,11 +171,11 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
 
     def get_params(self, deep: bool = True) -> dict:
         return {
-            'intervals': self.intervals_,
-            'labels': self.labels_,
-            'default_value': self.default_value_,
-            'output_column': self.output_column_,
-            'column': self.column_,
+            "intervals": self.intervals_,
+            "labels": self.labels_,
+            "default_value": self.default_value_,
+            "output_column": self.output_column_,
+            "column": self.column_,
         }
 
     def fit(self, X, y=None):
@@ -183,7 +183,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
 
     def transform(self, X):
         values = X[self.column_].astype(float).copy()
-        output = pd.Series(np.nan, index=X.index, dtype='object')
+        output = pd.Series(np.nan, index=X.index, dtype="object")
 
         for interval, label in zip(self.intervals_, self.labels_):
             output.loc[(values >= interval[0]) & (values < interval[1]),] = label
@@ -205,7 +205,7 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
     ):
-        '''
+        """
         Custom transformer to categorize a numeric column into intervals given a categorical column.
 
         Parameters
@@ -221,19 +221,19 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
-        '''
+        """
         if not isinstance(interval_categorizers, dict):
-            raise TypeError('interval_categorizers must be a dict')
+            raise TypeError("interval_categorizers must be a dict")
 
         for key, value in interval_categorizers.items():
             if not isinstance(key, str):
-                raise TypeError('Keys of interval_categorizers must be strings')
+                raise TypeError("Keys of interval_categorizers must be strings")
 
             if not isinstance(value, CustomIntervalCategorizer):
                 raise TypeError(
-                    'Values of interval_categorizers must be CustomIntervalCategorizer'
+                    "Values of interval_categorizers must be CustomIntervalCategorizer"
                 )
-            
+
         self._category_column = category_column
         self._interval_categorizers = interval_categorizers
         self._default_categorizer = default_categorizer
@@ -247,7 +247,7 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
     @property
     def interval_categorizers_(self) -> typing.Dict[str, CustomIntervalCategorizer]:
         return self._interval_categorizers
-    
+
     @property
     def default_categorizer_(self) -> typing.Optional[CustomIntervalCategorizer]:
         return self._default_categorizer
@@ -258,34 +258,34 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
 
     def get_params(self, deep: bool = True) -> dict:
         return {
-            'category_column': self.category_column_,
-            'interval_categorizers': self.interval_categorizers_,
-            'default_categorizer': self.default_categorizer_,
-            'default_value': self._default_value,
-            'output_column': self._output_column,
+            "category_column": self.category_column_,
+            "interval_categorizers": self.interval_categorizers_,
+            "default_categorizer": self.default_categorizer_,
+            "default_value": self._default_value,
+            "output_column": self._output_column,
         }
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
-        output = pd.Series(np.nan, index=X.index, dtype='object')
+        output = pd.Series(np.nan, index=X.index, dtype="object")
 
         for category, interval_categorizer in self.interval_categorizers_.items():
             output.loc[
                 X[self._category_column] == category
             ] = interval_categorizer.transform(
                 X.loc[X[self._category_column] == category]
-            )[
-                interval_categorizer.get_output_column()
-            ]
+            )[interval_categorizer.get_output_column()]
 
         if self._default_categorizer is not None:
-            output.loc[~(X[self.category_column_].isin(self.interval_categorizers_.keys()))] = self._default_categorizer.transform(
-                X.loc[~(X[self.category_column_].isin(self.interval_categorizers_.keys()))]
-            )[
-                self._default_categorizer.get_output_column()
-            ]
+            output.loc[
+                ~(X[self.category_column_].isin(self.interval_categorizers_.keys()))
+            ] = self._default_categorizer.transform(
+                X.loc[
+                    ~(X[self.category_column_].isin(self.interval_categorizers_.keys()))
+                ]
+            )[self._default_categorizer.get_output_column()]
 
         if self._default_value is not None:
             output.fillna(self._default_value, inplace=True)
