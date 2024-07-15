@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-setuptools = "^69.0.3"
+setuptools = ">=69.0.3,<71.0.0"
 scikit-learn = "*"
 pandas = "*"
 statsmodels = "*"
