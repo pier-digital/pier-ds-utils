@@ -24,7 +24,7 @@ class GLMWrapper(BaseCustomTransformer):
 
     def fit(self, X, y, **fit_params):
         if self._add_constant:
-            sm.add_constant(X)
+            X = sm.add_constant(X)
 
         self.model_ = sm.GLM(endog=y, exog=X, **self.init_params)
         fit_method = fit_params.pop("fit_method", "fit")
@@ -33,7 +33,7 @@ class GLMWrapper(BaseCustomTransformer):
 
     def predict(self, X, **predict_params):
         if self._add_constant:
-            sm.add_constant(X)
+            X = sm.add_constant(X)
 
         return self.results_.predict(exog=X, **predict_params) * self.os_factor
 
