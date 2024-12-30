@@ -5,6 +5,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 from pier_ds_utils.transformer import BaseCustomTransformer
+from pier_ds_utils.prep import add_constant_column
 from sklearn.base import BaseEstimator
 
 
@@ -24,7 +25,9 @@ class GLMWrapper(BaseCustomTransformer):
 
     def fit(self, X, y, **fit_params):
         if self._add_constant:
-            X = sm.add_constant(X)
+            X = add_constant_column(
+                X, prepend=True, constant_value=1.0, column_name="const"
+            )
 
         self.model_ = sm.GLM(endog=y, exog=X, **self.init_params)
         fit_method = fit_params.pop("fit_method", "fit")
@@ -33,7 +36,9 @@ class GLMWrapper(BaseCustomTransformer):
 
     def predict(self, X, **predict_params):
         if self._add_constant:
-            X = sm.add_constant(X)
+            X = add_constant_column(
+                X, prepend=True, constant_value=1.0, column_name="const"
+            )
 
         return self.results_.predict(exog=X, **predict_params) * self.os_factor
 
