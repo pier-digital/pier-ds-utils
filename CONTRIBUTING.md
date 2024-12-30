@@ -1,17 +1,17 @@
 # Contributing
 
-## Development 
+## Development
 
 ### Setting up a development environment
 
 If you don't have a local development environment, you can follow these steps to set one up.
 
-Install [poetry](https://python-poetry.org/) and [task](https://taskfile.dev/).
+Install [poetry](https://python-poetry.org/).
 
 Now, initialize the project:
 
 ```bash
-task init
+make init
 ```
 
 ### Running tests
@@ -19,7 +19,7 @@ task init
 You can run the tests with:
 
 ```bash
-task tests
+make tests
 ```
 
 This will run the tests with [pytest](https://docs.pytest.org/en/latest/) and show information about the coverage.
@@ -27,14 +27,15 @@ This will run the tests with [pytest](https://docs.pytest.org/en/latest/) and sh
 ### Formatting the code
 
 To look for formatting issues:
+
 ```bash
-task check-formatting
+make check-formatting
 ```
 
 To format the code, you can use the command:
 
 ```bash
-task formatting
+make formatting
 ```
 
 ### Releasing a new version
