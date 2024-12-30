@@ -46,3 +46,11 @@ def test_add_constant_column(
         constant_value=constant_value,
     )
     assert df_with_const.equals(expected_df)
+
+
+def test_add_constant_column_with_wrong_input_type():
+    with pytest.raises(ValueError):
+        add_constant_column("not a DataFrame")
+
+    with pytest.raises(ValueError):
+        add_constant_column(pd.Series([1, 2, 3]))
