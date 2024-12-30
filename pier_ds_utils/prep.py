@@ -2,7 +2,7 @@ import pandas as pd
 import typing
 
 
-def add_constant(
+def add_constant_column(
     df: typing.Union[pd.DataFrame, pd.Series],
     prepend: bool = True,
     column_name: str = "const",

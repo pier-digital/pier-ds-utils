@@ -1,4 +1,4 @@
-from pier_ds_utils.prep import add_constant
+from pier_ds_utils.prep import add_constant_column
 import pandas as pd
 import pytest
 
@@ -39,7 +39,7 @@ import pytest
 def test_add_constant_column(
     input_df, prepend, column_name, constant_value, expected_df
 ):
-    df_with_const = add_constant(
+    df_with_const = add_constant_column(
         input_df,
         prepend=prepend,
         column_name=column_name,
