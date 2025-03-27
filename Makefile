@@ -14,3 +14,4 @@ check-formatting:
 .PHONY: formatting
 formatting:
 	poetry run ruff format .
+	poetry run ruff check .
