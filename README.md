@@ -33,6 +33,25 @@ predict_proba_selector = ds.estimator.PredictProbaSelector(...)
 predictor = ds.predictor.StaticGLM(...)
 ```
 
+Example usage:
+
+```python
+from pier_ds_utils.predictor import StaticGLM
+import pandas as pd
+
+glm = StaticGLM(
+    coefficients_map={"feature1": 0.5, "feature2": 1.5},  # required
+    constant=2.0,  # optional
+    os_factor=1.0,  # optional
+)
+
+df = pd.DataFrame({"feature1": [1, 2], "feature2": [3, 4]})
+
+# The predict is equivalent to:
+# y = (0.5 * feature1 + 1.5 * feature2 + constant) * os_factor
+print(glm.predict(df))  # Output: [7. 9.]
+```
+
 ## Installation
 
 ```bash
