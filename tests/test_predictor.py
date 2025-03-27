@@ -1,4 +1,4 @@
-from pier_ds_utils.predictors import StaticGLM
+from pier_ds_utils.predictor import StaticGLM
 from sklearn.pipeline import Pipeline
 import numpy as np
 import pandas as pd

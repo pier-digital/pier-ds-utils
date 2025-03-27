@@ -6,17 +6,31 @@ Found a bug or have a feature request? [Open an issue](https://github.com/pier-d
 
 ## Usage
 
+First, import the library:
+
 ```python
 import pier_ds_utils as ds
+```
 
-# Transformers
+### Transformers
+
+```python
 discrete_categorizer = ds.transformer.CustomDiscreteCategorizer(...)
 interval_categorizer = ds.transformer.CustomIntervalCategorizer(...)
 interval_categorizer_by_category = ds.transformer.CustomIntervalCategorizerByCategory(...)
+```
 
-# Estimators
+### Estimators
+
+```python
 glm_wrapper = ds.estimator.GLMWrapper(...)
 predict_proba_selector = ds.estimator.PredictProbaSelector(...)
+```
+
+### Predictors
+
+```python
+predictor = ds.predictor.StaticGLM(...)
 ```
 
 ## Installation
@@ -30,6 +44,7 @@ poetry add pier-ds-utils
 ```
 
 For a specific [version](https://github.com/pier-digital/pier-ds-utils/releases):
+
 ```bash
 pip install pier-ds-utils@_version_
 
