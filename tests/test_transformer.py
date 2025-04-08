@@ -317,3 +317,27 @@ def test_log_transformer_with_multiple_columns():
     assert transformed_X is not None
     assert transformed_X.shape == (10, 2)
     assert transformed_X.columns.tolist() == ["log__price", "log__price2"]
+
+
+def test_boundaries_transformer():
+    X = pd.DataFrame(
+        {
+            "price": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        }
+    )
+
+    ct = ColumnTransformer(
+        [
+            (
+                "boundaries",
+                ds.transformer.BoundariesTransformer(lower_bound=2, upper_bound=9),
+                ["price"],
+            )
+        ]
+    ).set_output(transform="pandas")
+
+    transformed_X = ct.fit_transform(X)
+    assert transformed_X is not None
+    assert transformed_X.shape == (10, 1)
+    assert transformed_X.columns.tolist() == ["boundaries__price"]
+    assert transformed_X["boundaries__price"].tolist() == [2, 2, 3, 4, 5, 6, 7, 8, 9, 9]

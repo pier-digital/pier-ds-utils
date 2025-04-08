@@ -16,11 +16,70 @@ import pier_ds_utils as ds
 
 ### Transformers
 
+#### CustomDiscreteCategorizer
+
 ```python
-discrete_categorizer = ds.transformer.CustomDiscreteCategorizer(...)
-interval_categorizer = ds.transformer.CustomIntervalCategorizer(...)
-interval_categorizer_by_category = ds.transformer.CustomIntervalCategorizerByCategory(...)
+discrete_categorizer = ds.transformer.CustomDiscreteCategorizer(
+        column="input_col_name",
+        categories=[["my_category_value_1", "my_category_value_2"], ["my_category_value_3"]],
+        labels=["label_1", "label_2"],
+        default_value="a-default-value",
+        output_column="output_col_name",
+    )
+```
+
+#### CustomIntervalCategorizer
+
+```python
+interval_categorizer = ds.transformer.CustomIntervalCategorizer(
+    column="price",
+    intervals=[(6700000, sys.maxsize)],
+    labels=["gt_67k"],
+    default_value="lt_67k",
+    output_column="cat_price",
+)
+```
+
+#### CustomIntervalCategorizerByCategory
+
+```python
+interval_categorizer_by_category = ds.transformer.CustomIntervalCategorizerByCategory(
+    category_column: "category",
+    interval_categorizers: {
+        "category_1": CustomIntervalCategorizer(
+            column="price",
+            intervals=[(6700000, sys.maxsize)],
+            labels=["gt_67k"],
+            default_value="lt_67k",
+            output_column="cat_price",
+        ),
+        "category_2": CustomIntervalCategorizer(
+            column="price",
+            intervals=[(0, 1000000)],
+            labels=["lt_1M"],
+            default_value="gt_1M",
+            output_column="cat_price",
+        ),
+    },
+    output_column = "cat_price",
+)
+```
+
+#### LogTransformer
+
+```python
 log_transformer = ds.transformer.LogTransformer()
+```
+
+#### BoundariesTransformer
+
+```python
+boundaries_transformer = ds.transformer.BoundariesTransformer(
+    column="price",
+    lower_bound=0,
+    upper_bound=1000000,
+    output_column="price_bounded",
+)
 ```
 
 ### Estimators

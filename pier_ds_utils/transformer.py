@@ -306,3 +306,32 @@ class LogTransformer(BaseCustomTransformer):
     def transform(self, X):
         # Apply log transformation (ensure values are positive for log)
         return X.apply(np.log, axis=1)
+
+
+class BoundariesTransformer(BaseCustomTransformer):
+    def __init__(self, lower_bound: float = None, upper_bound: float = None):
+        """Transformer to apply lower and upper bounds to the input data.
+        This transformer is useful for capping or flooring values in a dataset.
+        The lower_bound and upper_bound parameters are optional. If not provided, the transformer will not apply any bounds.
+        The bounds are inclusive, meaning that values equal to the bounds will be kept as is.
+        """
+        self._lower_bound = lower_bound
+        self._upper_bound = upper_bound
+
+    def get_params(self, deep=True):
+        return {
+            "lower_bound": self._lower_bound,
+            "upper_bound": self._upper_bound,
+        }
+
+    def fit(self, X, y=None):
+        # No fitting needed for this transformer
+        return self
+
+    def transform(self, X):
+        # Apply boundaries transformation
+        if self._lower_bound is not None:
+            X.clip(lower=self._lower_bound, inplace=True)
+        if self._upper_bound is not None:
+            X.clip(upper=self._upper_bound, inplace=True)
+        return X
