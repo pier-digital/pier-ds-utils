@@ -294,3 +294,15 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
         X.loc[:, output_column] = output
 
         return X
+
+
+class LogTransformer(BaseCustomTransformer):
+    """Calculates the natural logarithm of the input data. This transformer is useful for transforming skewed data into a more normal distribution."""
+
+    def fit(self, X, y=None):
+        # No fitting needed for this transformer
+        return self
+
+    def transform(self, X):
+        # Apply log transformation (ensure values are positive for log)
+        return X.apply(np.log, axis=1)

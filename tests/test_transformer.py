@@ -1,5 +1,6 @@
 import pandas as pd
 import pier_ds_utils as ds
+from sklearn.compose import ColumnTransformer
 
 
 def test_custom_discrete_categorizer():
@@ -236,3 +237,83 @@ def test_custom_interval_categorizer_by_category():
         "fx_outras_marcas",
         "fx_outras_marcas",
     ]
+
+
+def test_log_transformer():
+    X = pd.DataFrame(
+        {
+            "price": [
+                498,
+                2699,
+                2700,
+                3447.5,
+                3447.6,
+                5591,
+                5592,
+                13949,
+                200,
+                -15999,
+            ],
+        }
+    )
+
+    ct = ColumnTransformer(
+        [("log", ds.transformer.LogTransformer(), ["price"])]
+    ).set_output(transform="pandas")
+
+    transformed_X = ct.fit_transform(X)
+    assert transformed_X is not None
+    assert transformed_X.shape == (10, 1)
+    assert transformed_X.columns.tolist() == ["log__price"]
+
+
+def test_log_transformer_with_multiple_columns():
+    X = pd.DataFrame(
+        {
+            "price": [
+                498,
+                2699,
+                2700,
+                3447.5,
+                3447.6,
+                5591,
+                5592,
+                13949,
+                200,
+                -15999,
+            ],
+            "price2": [
+                498,
+                2699,
+                2700,
+                3447.5,
+                3447.6,
+                5591,
+                5592,
+                13949,
+                200,
+                -15999,
+            ],
+            "category": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+                "I",
+                "J",
+            ],
+        }
+    )
+
+    ct = ColumnTransformer(
+        [("log", ds.transformer.LogTransformer(), ["price", "price2"])]
+    ).set_output(transform="pandas")
+
+    transformed_X = ct.fit_transform(X)
+    assert transformed_X is not None
+    assert transformed_X.shape == (10, 2)
+    assert transformed_X.columns.tolist() == ["log__price", "log__price2"]
