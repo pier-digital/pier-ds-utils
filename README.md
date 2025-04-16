@@ -75,10 +75,8 @@ log_transformer = ds.transformer.LogTransformer()
 
 ```python
 boundaries_transformer = ds.transformer.BoundariesTransformer(
-    column="price",
     lower_bound=0,
     upper_bound=1000000,
-    output_column="price_bounded",
 )
 ```
 
