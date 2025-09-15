@@ -309,29 +309,71 @@ class LogTransformer(BaseCustomTransformer):
 
 
 class BoundariesTransformer(BaseCustomTransformer):
-    def __init__(self, lower_bound: float = None, upper_bound: float = None):
-        """Transformer to apply lower and upper bounds to the input data.
-        This transformer is useful for capping or flooring values in a dataset.
-        The lower_bound and upper_bound parameters are optional. If not provided, the transformer will not apply any bounds.
-        The bounds are inclusive, meaning that values equal to the bounds will be kept as is.
+    def __init__(
+        self,
+        lower_bound: float,
+        upper_bound: float,
+        lower_value: float = None,
+        upper_value: float = None,
+    ):
+        """
+        Transformer to apply lower and upper boundaries to the data.
+
+        This transformer replaces values that fall outside the specified
+        lower and/or upper boundaries. If a replacement value is not provided,
+        the corresponding boundary itself will be used as the replacement.
+
+        Parameters
+        ----------
+        lower_bound : float
+            Lower boundary (cut-off condition). Values strictly less than this
+            threshold will be replaced.
+
+        upper_bound : float
+            Upper boundary (cut-off condition). Values strictly greater than this
+            threshold will be replaced.
+
+        lower_value : float, optional (default=None)
+            Replacement value when ``X < lower_bound``.
+            If None, uses ``lower_bound`` itself.
+
+        upper_value : float, optional (default=None)
+            Replacement value when ``X > upper_bound``.
+            If None, uses ``upper_bound`` itself.
+
+        Returns
+        -------
+        X : array-like or DataFrame of shape (n_samples, n_features)
+            Transformed data with values capped or floored according
+            to the specified boundaries.
         """
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
+        self._lower_value = lower_value
+        self._upper_value = upper_value
 
     def get_params(self, deep=True):
         return {
             "lower_bound": self._lower_bound,
             "upper_bound": self._upper_bound,
+            "lower_value": self._lower_value,
+            "upper_value": self._upper_value,
         }
 
     def fit(self, X, y=None):
-        # No fitting needed for this transformer
         return self
 
     def transform(self, X):
-        # Apply boundaries transformation
-        if self._lower_bound is not None:
-            X.clip(lower=self._lower_bound, inplace=True)
-        if self._upper_bound is not None:
-            X.clip(upper=self._upper_bound, inplace=True)
+        X = X.copy()
+
+        replacement = (
+            self._lower_value if self._lower_value is not None else self._lower_bound
+        )
+        X[X < self._lower_bound] = replacement
+
+        replacement = (
+            self._upper_value if self._upper_value is not None else self._upper_bound
+        )
+        X[X > self._upper_bound] = replacement
+
         return X

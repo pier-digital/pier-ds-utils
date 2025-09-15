@@ -80,6 +80,16 @@ boundaries_transformer = ds.transformer.BoundariesTransformer(
 )
 ```
 
+```python
+boundaries_transformer = ds.transformer.BoundariesTransformer(
+    lower_bound=0,
+    upper_bound=1000000,
+    lower_value=10,
+    upper_value=1200000
+)
+```
+
+
 ### Estimators
 
 ```python
