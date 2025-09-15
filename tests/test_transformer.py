@@ -341,3 +341,44 @@ def test_boundaries_transformer():
     assert transformed_X.shape == (10, 1)
     assert transformed_X.columns.tolist() == ["boundaries__price"]
     assert transformed_X["boundaries__price"].tolist() == [2, 2, 3, 4, 5, 6, 7, 8, 9, 9]
+
+
+def test_boundaries_transformer_with_custom_values():
+    X = pd.DataFrame(
+        {
+            "price": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        }
+    )
+
+    ct = ColumnTransformer(
+        [
+            (
+                "boundaries",
+                ds.transformer.BoundariesTransformer(
+                    lower_bound=2,
+                    upper_bound=9,
+                    lower_value=0,
+                    upper_value=99,
+                ),
+                ["price"],
+            )
+        ]
+    ).set_output(transform="pandas")
+
+    transformed_X = ct.fit_transform(X)
+
+    assert transformed_X is not None
+    assert transformed_X.shape == (10, 1)
+    assert transformed_X.columns.tolist() == ["boundaries__price"]
+    assert transformed_X["boundaries__price"].tolist() == [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        99,
+    ]
