@@ -85,7 +85,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._column
-        X.loc[:, output_column] = output
+        X[output_column] = output
 
         return X
 
@@ -192,7 +192,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         if self.default_value_ is not None:
             output.fillna(self.default_value_, inplace=True)
 
-        X.loc[:, self.get_output_column()] = output
+        X[self.get_output_column()] = output
 
         return X
 
@@ -292,7 +292,7 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._category_column
-        X.loc[:, output_column] = output
+        X[output_column] = output
 
         return X
 
@@ -372,7 +372,7 @@ class CustomMathOperation(BaseCustomTransformer):
 
     def transform(self, X):
         op = self._OPERATIONS[self._operation]
-        X.loc[:, self.get_output_column()] = op(X[self._column_a], X[self._column_b])
+        X[self.get_output_column()] = op(X[self._column_a], X[self._column_b])
         return X
 
 
