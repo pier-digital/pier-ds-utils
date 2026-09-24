@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "pier-ds-utils"
-version = "0.6.0"
+version = "0.7.0"
 description = "A library for data science teams to avoid code duplication in common tasks involving scikit-learn transformers and estimators."
 authors = ["Gabriel Guarisa <gabriel.guarisa@pier.digital>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.9"
 setuptools = "^69.0.3"
 scikit-learn = "*"
 pandas = "*"

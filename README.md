@@ -65,6 +65,17 @@ interval_categorizer_by_category = ds.transformer.CustomIntervalCategorizerByCat
 )
 ```
 
+#### CustomMathOperation
+
+```python
+math_operation = ds.transformer.CustomMathOperation(
+    operation="multiplication",  # also accepts addition, subtraction, division
+    column_a="discrete_col",
+    column_b="numeric_col",
+    output_column="output_col_name",
+)
+```
+
 #### LogTransformer
 
 ```python

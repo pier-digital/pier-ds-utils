@@ -1,5 +1,6 @@
 import pandas as pd
 import pier_ds_utils as ds
+import pytest
 from sklearn.compose import ColumnTransformer
 
 
@@ -237,6 +238,106 @@ def test_custom_interval_categorizer_by_category():
         "fx_outras_marcas",
         "fx_outras_marcas",
     ]
+
+
+def test_custom_math_operation_multiplication():
+    operation = ds.transformer.CustomMathOperation(
+        operation="multiplication",
+        column_a="discrete_col",
+        column_b="numeric_col",
+        output_column="output_col_name",
+    )
+
+    X = pd.DataFrame(
+        {
+            "discrete_col": [1, 2, 3, 4],
+            "numeric_col": [10, 20, 30, 40],
+        }
+    )
+
+    X = operation.fit_transform(X)
+
+    assert X["output_col_name"].tolist() == [10, 40, 90, 160]
+
+
+def test_custom_math_operation_addition():
+    operation = ds.transformer.CustomMathOperation(
+        operation="addition",
+        column_a="a",
+        column_b="b",
+        output_column="sum",
+    )
+
+    X = pd.DataFrame({"a": [1, 2, 3], "b": [10, 20, 30]})
+
+    X = operation.fit_transform(X)
+
+    assert X["sum"].tolist() == [11, 22, 33]
+
+
+def test_custom_math_operation_subtraction():
+    operation = ds.transformer.CustomMathOperation(
+        operation="subtraction",
+        column_a="a",
+        column_b="b",
+        output_column="diff",
+    )
+
+    X = pd.DataFrame({"a": [10, 20, 30], "b": [1, 2, 3]})
+
+    X = operation.fit_transform(X)
+
+    assert X["diff"].tolist() == [9, 18, 27]
+
+
+def test_custom_math_operation_division():
+    operation = ds.transformer.CustomMathOperation(
+        operation="division",
+        column_a="a",
+        column_b="b",
+        output_column="ratio",
+    )
+
+    X = pd.DataFrame({"a": [10, 20, 30], "b": [2, 5, 3]})
+
+    X = operation.fit_transform(X)
+
+    assert X["ratio"].tolist() == [5, 4, 10]
+
+
+def test_custom_math_operation_invalid_operation():
+    with pytest.raises(ValueError):
+        ds.transformer.CustomMathOperation(
+            operation="not-a-valid-operation",
+            column_a="a",
+            column_b="b",
+            output_column="output",
+        )
+
+
+def test_custom_math_operation_requires_output_column():
+    with pytest.raises(TypeError):
+        ds.transformer.CustomMathOperation(
+            operation="multiplication",
+            column_a="a",
+            column_b="b",
+        )
+
+
+def test_custom_math_operation_get_params():
+    operation = ds.transformer.CustomMathOperation(
+        operation="multiplication",
+        column_a="a",
+        column_b="b",
+        output_column="output",
+    )
+
+    params = operation.get_params()
+
+    assert params["operation"] == "multiplication"
+    assert params["column_a"] == "a"
+    assert params["column_b"] == "b"
+    assert params["output_column"] == "output"
 
 
 def test_log_transformer():

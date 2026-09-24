@@ -1,3 +1,4 @@
+import operator
 import typing
 
 import numpy as np
@@ -293,6 +294,85 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
         output_column = self._output_column or self._category_column
         X.loc[:, output_column] = output
 
+        return X
+
+
+_MATH_OPERATIONS = {
+    "addition": operator.add,
+    "subtraction": operator.sub,
+    "multiplication": operator.mul,
+    "division": operator.truediv,
+}
+
+
+class CustomMathOperation(BaseCustomTransformer):
+    _OPERATIONS = _MATH_OPERATIONS
+
+    def __init__(
+        self,
+        operation: str,
+        column_a: str,
+        column_b: str,
+        output_column: str,
+    ):
+        """
+        Transformer to apply a math operation between two columns.
+
+        Parameters
+        ----------
+        operation: str
+            Operation to apply. One of "addition", "subtraction",
+            "multiplication", "division".
+        column_a: str
+            Name of the first operand column.
+        column_b: str
+            Name of the second operand column.
+        output_column: str
+            Name of the output column.
+        """
+        if operation not in self._OPERATIONS:
+            raise ValueError(
+                f"operation must be one of {list(self._OPERATIONS)}, got {operation!r}"
+            )
+
+        self._operation = operation
+        self._column_a = column_a
+        self._column_b = column_b
+        self._output_column = output_column
+
+    @property
+    def operation_(self) -> str:
+        return self._operation
+
+    @property
+    def column_a_(self) -> str:
+        return self._column_a
+
+    @property
+    def column_b_(self) -> str:
+        return self._column_b
+
+    @property
+    def output_column_(self) -> str:
+        return self._output_column
+
+    def get_output_column(self) -> str:
+        return self._output_column
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "operation": self._operation,
+            "column_a": self._column_a,
+            "column_b": self._column_b,
+            "output_column": self._output_column,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        op = self._OPERATIONS[self._operation]
+        X.loc[:, self.get_output_column()] = op(X[self._column_a], X[self._column_b])
         return X
 
 
