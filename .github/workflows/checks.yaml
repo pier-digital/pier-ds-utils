@@ -14,6 +14,9 @@ on:
       - "**/*.png"
       - "**/*.json"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -46,3 +49,377 @@ jobs:
           junitxml-path: pytest.xml
           badge-title: coverage
           create-new-comment: true
+
+  lint:
+    name: Ruff lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run ruff lint
+        run: make lint RUFF_ARGS="--output-format=json --output-file=ruff-report.json"
+
+      - name: Upload ruff report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruff-report
+          path: ruff-report.json
+          if-no-files-found: warn
+
+  duplication:
+    name: Code duplication
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run jscpd
+        shell: bash
+        run: |
+          set -o pipefail
+          make duplication JSCPD_ARGS="--reporters console,json --output jscpd-report" 2>&1 | tee jscpd-report.txt
+          cp jscpd-report/jscpd-report.json jscpd-report.json
+
+      - name: Upload jscpd report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jscpd-report
+          path: |
+            jscpd-report.txt
+            jscpd-report.json
+          if-no-files-found: warn
+
+  complexity:
+    name: Code complexity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Run complexipy
+        run: make cc COMPLEXIPY_ARGS="--output-format json --output complexipy-report.json --quiet"
+
+      - name: Upload complexipy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: complexipy-report
+          path: complexipy-report.json
+          if-no-files-found: warn
+
+  pr-comment:
+    name: PR checks report
+    runs-on: ubuntu-latest
+    needs: [lint, duplication, complexity]
+    if: always() && github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          path: reports
+          merge-multiple: true
+
+      - name: Create or update PR comment
+        uses: actions/github-script@v7
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          DUPLICATION_RESULT: ${{ needs.duplication.result }}
+          COMPLEXITY_RESULT: ${{ needs.complexity.result }}
+        with:
+          script: |
+            const fs = require("fs");
+
+            const marker = "<!-- pier-ds-utils-checks-report -->";
+
+            function readText(filePath) {
+              if (!fs.existsSync(filePath)) {
+                return "";
+              }
+
+              return fs.readFileSync(filePath, "utf8").trim();
+            }
+
+            function readJson(filePath, fallback) {
+              const content = readText(filePath);
+              if (!content) {
+                return fallback;
+              }
+
+              try {
+                return JSON.parse(content);
+              } catch (error) {
+                return fallback;
+              }
+            }
+
+            function readMakeVariable(name, fallback) {
+              const makefile = readText("Makefile");
+              const match = makefile.match(new RegExp(`^${name}\\s*\\?=\\s*(\\S+)`, "m"));
+              return match ? match[1] : fallback;
+            }
+
+            const maxAllowedComplexity = Number(readMakeVariable("COMPLEXITY_MAX", "10"));
+            const maxAllowedDuplication = Number(readMakeVariable("JSCPD_THRESHOLD", "3"));
+
+            function formatResult(result) {
+              const icons = {
+                success: "✅",
+                failure: "❌",
+                cancelled: "⚪",
+                skipped: "⚪",
+              };
+
+              return `${icons[result] || "⚪"} ${result}`;
+            }
+
+            function formatNumber(value, digits = 2) {
+              if (!Number.isFinite(value)) {
+                return "n/a";
+              }
+
+              return value.toFixed(digits);
+            }
+
+            function parseRuffMetrics() {
+              const violations = readJson("reports/ruff-report.json", []);
+              const byCode = violations.reduce((acc, violation) => {
+                const code = violation.code || "unknown";
+                acc[code] = (acc[code] || 0) + 1;
+                return acc;
+              }, {});
+
+              return {
+                violations: violations.length,
+                byCode,
+              };
+            }
+
+            function parseComplexityMetrics() {
+              const entries = readJson("reports/complexipy-report.json", []);
+              const values = entries
+                .map((entry) => Number(entry.complexity))
+                .filter((value) => Number.isFinite(value));
+
+              if (values.length === 0) {
+                return {
+                  functions: 0,
+                  max: undefined,
+                  min: undefined,
+                  average: undefined,
+                  stddev: undefined,
+                  overall: undefined,
+                  overLimit: 0,
+                  topFunctions: [],
+                };
+              }
+
+              const sum = values.reduce((acc, value) => acc + value, 0);
+              const average = sum / values.length;
+              const variance = values.reduce((acc, value) => acc + ((value - average) ** 2), 0) / values.length;
+              const stddev = Math.sqrt(variance);
+              const max = Math.max(...values);
+              const min = Math.min(...values);
+              const overall = average + stddev;
+              const overLimit = values.filter((value) => value > maxAllowedComplexity).length;
+              const topFunctions = entries
+                .slice()
+                .sort((a, b) => Number(b.complexity) - Number(a.complexity))
+                .slice(0, 10);
+
+              return {
+                functions: values.length,
+                max,
+                min,
+                average,
+                stddev,
+                overall,
+                overLimit,
+                topFunctions,
+              };
+            }
+
+            function parseDuplicationMetrics() {
+              const report = readJson("reports/jscpd-report.json", null)
+                || readJson("reports/jscpd-report/jscpd-report.json", {});
+              const total = report?.statistics?.total || {};
+              const duplicates = Array.isArray(report?.duplicates) ? report.duplicates : [];
+              const topDuplicates = duplicates.slice(0, 10).map((duplicate) => ({
+                format: duplicate.format || "n/a",
+                lines: duplicate.lines ?? "n/a",
+                firstFile: duplicate.firstFile?.name || "n/a",
+                firstStart: duplicate.firstFile?.start ?? "n/a",
+                secondFile: duplicate.secondFile?.name || "n/a",
+                secondStart: duplicate.secondFile?.start ?? "n/a",
+              }));
+
+              return {
+                files: total.sources ?? 0,
+                lines: total.lines ?? 0,
+                clones: total.clones ?? duplicates.length,
+                duplicatedLines: total.duplicatedLines ?? 0,
+                duplicatedTokens: total.duplicatedTokens ?? 0,
+                percentage: total.percentage,
+                percentageTokens: total.percentageTokens,
+                topDuplicates,
+              };
+            }
+
+            function details(summary, lines) {
+              return [
+                `<details><summary>${summary}</summary>`,
+                "",
+                ...lines,
+                "",
+                "</details>",
+              ].join("\n");
+            }
+
+            function table(rows) {
+              return [
+                "| Metric | Value |",
+                "| --- | --- |",
+                ...rows.map(([metric, value]) => `| ${metric} | ${value} |`),
+              ];
+            }
+
+            const ruff = parseRuffMetrics();
+            const duplication = parseDuplicationMetrics();
+            const complexity = parseComplexityMetrics();
+
+            const ruffByCodeRows = Object.entries(ruff.byCode)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([code, count]) => `| ${code} | ${count} |`);
+
+            const topComplexityRows = complexity.topFunctions.map((entry) => (
+              `| ${entry.path} | ${entry.function_name} | ${entry.complexity} |`
+            ));
+
+            const topDuplicationRows = duplication.topDuplicates.map((entry) => (
+              `| ${entry.format} | ${entry.lines} | ${entry.firstFile}:${entry.firstStart} | ${entry.secondFile}:${entry.secondStart} |`
+            ));
+
+            const body = [
+              marker,
+              "## Checks Report",
+              "",
+              "### Summary",
+              "",
+              "| Check | Result | Summary |",
+              "| --- | --- | --- |",
+              `| Ruff lint | ${formatResult(process.env.LINT_RESULT)} | ${ruff.violations} violations |`,
+              `| Code duplication | ${formatResult(process.env.DUPLICATION_RESULT)} | ${formatNumber(duplication.percentage)}% duplicated lines, ${duplication.clones} clones |`,
+              `| Code complexity | ${formatResult(process.env.COMPLEXITY_RESULT)} | max ${complexity.max ?? "n/a"}, average ${formatNumber(complexity.average)}, overall ${formatNumber(complexity.overall)} |`,
+              "",
+              details("Ruff lint metrics", [
+                ...table([
+                  ["Violations", ruff.violations],
+                ]),
+                "",
+                "| Rule | Violations |",
+                "| --- | --- |",
+                ...(ruffByCodeRows.length > 0 ? ruffByCodeRows : ["| n/a | 0 |"]),
+              ]),
+              "",
+              details("Duplication metrics", [
+                ...table([
+                  ["Files analyzed", duplication.files],
+                  ["Total lines", duplication.lines],
+                  ["Clones found", duplication.clones],
+                  ["Duplicated lines", duplication.duplicatedLines],
+                  ["Duplicated tokens", duplication.duplicatedTokens],
+                  ["Duplicated lines (%)", `${formatNumber(duplication.percentage)}%`],
+                  ["Duplicated tokens (%)", `${formatNumber(duplication.percentageTokens)}%`],
+                  ["Allowed duplicated lines (%)", `${formatNumber(maxAllowedDuplication)}%`],
+                ]),
+                "",
+                "| Format | Lines | First occurrence | Second occurrence |",
+                "| --- | --- | --- | --- |",
+                ...(topDuplicationRows.length > 0 ? topDuplicationRows : ["| n/a | n/a | n/a | n/a |"]),
+              ]),
+              "",
+              details("Complexity metrics", [
+                ...table([
+                  ["Functions analyzed", complexity.functions],
+                  ["Maximum complexity", complexity.max ?? "n/a"],
+                  ["Minimum complexity", complexity.min ?? "n/a"],
+                  ["Average complexity", formatNumber(complexity.average)],
+                  ["Standard deviation", formatNumber(complexity.stddev)],
+                  ["Overall complexity", formatNumber(complexity.overall)],
+                  ["Allowed maximum per function", maxAllowedComplexity],
+                  ["Functions above limit", complexity.overLimit],
+                ]),
+                "",
+                "| File | Function | Complexity |",
+                "| --- | --- | --- |",
+                ...(topComplexityRows.length > 0 ? topComplexityRows : ["| n/a | n/a | n/a |"]),
+              ]),
+            ].join("\n");
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const previousComments = comments.filter((comment) => (
+              comment.user.type === "Bot" && comment.body.includes(marker)
+            ));
+
+            for (const comment of previousComments) {
+              try {
+                await github.graphql(`
+                  mutation MinimizeComment($subjectId: ID!) {
+                    minimizeComment(input: { subjectId: $subjectId, classifier: OUTDATED }) {
+                      minimizedComment {
+                        isMinimized
+                      }
+                    }
+                  }
+                `, {
+                  subjectId: comment.node_id,
+                });
+              } catch (error) {
+                core.warning(`Could not minimize previous report comment ${comment.id}: ${error.message}`);
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });

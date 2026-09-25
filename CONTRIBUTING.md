@@ -29,7 +29,7 @@ This will run the tests with [pytest](https://docs.pytest.org/en/latest/) and sh
 To look for formatting issues:
 
 ```bash
-make check-formatting
+make lint
 ```
 
 To format the code, you can use the command:
@@ -37,6 +37,16 @@ To format the code, you can use the command:
 ```bash
 make formatting
 ```
+
+### Running all quality checks
+
+To run the full set of quality checks (lint, code duplication, and code complexity):
+
+```bash
+make check
+```
+
+This runs [ruff](https://docs.astral.sh/ruff/) for linting/formatting, [jscpd](https://github.com/kucherenko/jscpd) for code duplication, and [complexipy](https://github.com/rohaquinlop/complexipy) for cognitive complexity. `jscpd` and `complexipy` are fetched on demand via `npx`/`uvx`, so no extra install step is needed beyond having [Node.js](https://nodejs.org/) available locally in addition to `uv`.
 
 ### Releasing a new version
 
