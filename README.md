@@ -141,6 +141,10 @@ pip install pier-ds-utils
 # or
 
 poetry add pier-ds-utils
+
+# or
+
+uv add pier-ds-utils
 ```
 
 For a specific
@@ -152,6 +156,10 @@ pip install pier-ds-utils@_version_
 # or
 
 poetry add pier-ds-utils@_version_
+
+# or
+
+uv add pier-ds-utils@_version_
 ```
 
 ## Contributing
