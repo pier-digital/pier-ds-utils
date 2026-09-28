@@ -76,6 +76,18 @@ math_operation = ds.transformer.CustomMathOperation(
 )
 ```
 
+#### CustomMathOperationByConstant
+
+```python
+math_operation_by_constant = ds.transformer.CustomMathOperationByConstant(
+    operation="multiplication",  # also accepts addition, subtraction, division
+    column="numeric_col",
+    constant=1.1,
+    output_column="output_col_name",
+    invert_order=False,  # set True to compute constant op column instead of column op constant
+)
+```
+
 #### LogTransformer
 
 ```python

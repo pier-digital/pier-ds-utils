@@ -376,6 +376,91 @@ class CustomMathOperation(BaseCustomTransformer):
         return X
 
 
+class CustomMathOperationByConstant(BaseCustomTransformer):
+    _OPERATIONS = _MATH_OPERATIONS
+
+    def __init__(
+        self,
+        operation: str,
+        column: str,
+        constant: typing.Union[int, float],
+        output_column: str,
+        invert_order: bool = False,
+    ):
+        """
+        Transformer to apply a math operation between a column and a constant.
+
+        Parameters
+        ----------
+        operation: str
+            Operation to apply. One of "addition", "subtraction",
+            "multiplication", "division".
+        column: str
+            Name of the operand column.
+        constant: int or float
+            Constant value to apply the operation with.
+        output_column: str
+            Name of the output column.
+        invert_order: bool
+            If True, applies `constant op column` instead of the default
+            `column op constant`. Useful for non-commutative operations
+            (subtraction, division). Defaults to False.
+        """
+        if operation not in self._OPERATIONS:
+            raise ValueError(
+                f"operation must be one of {list(self._OPERATIONS)}, got {operation!r}"
+            )
+
+        self._operation = operation
+        self._column = column
+        self._constant = constant
+        self._output_column = output_column
+        self._invert_order = invert_order
+
+    @property
+    def operation_(self) -> str:
+        return self._operation
+
+    @property
+    def column_(self) -> str:
+        return self._column
+
+    @property
+    def constant_(self) -> typing.Union[int, float]:
+        return self._constant
+
+    @property
+    def output_column_(self) -> str:
+        return self._output_column
+
+    @property
+    def invert_order_(self) -> bool:
+        return self._invert_order
+
+    def get_output_column(self) -> str:
+        return self._output_column
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "operation": self._operation,
+            "column": self._column,
+            "constant": self._constant,
+            "output_column": self._output_column,
+            "invert_order": self._invert_order,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        op = self._OPERATIONS[self._operation]
+        if self._invert_order:
+            X[self.get_output_column()] = op(self._constant, X[self._column])
+        else:
+            X[self.get_output_column()] = op(X[self._column], self._constant)
+        return X
+
+
 class LogTransformer(BaseCustomTransformer):
     """Calculates the natural logarithm of the input data. This transformer is useful for transforming skewed data into a more normal distribution."""
 
