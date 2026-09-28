@@ -6,7 +6,7 @@
 
 If you don't have a local development environment, you can follow these steps to set one up.
 
-Install [poetry](https://python-poetry.org/).
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 Now, initialize the project:
 
@@ -29,7 +29,7 @@ This will run the tests with [pytest](https://docs.pytest.org/en/latest/) and sh
 To look for formatting issues:
 
 ```bash
-make check-formatting
+make lint
 ```
 
 To format the code, you can use the command:
@@ -38,12 +38,22 @@ To format the code, you can use the command:
 make formatting
 ```
 
+### Running all quality checks
+
+To run the full set of quality checks (lint, code duplication, and code complexity):
+
+```bash
+make check
+```
+
+This runs [ruff](https://docs.astral.sh/ruff/) for linting/formatting, [jscpd](https://github.com/kucherenko/jscpd) for code duplication, and [complexipy](https://github.com/rohaquinlop/complexipy) for cognitive complexity. `jscpd` and `complexipy` are fetched on demand via `npx`/`uvx`, so no extra install step is needed beyond having [Node.js](https://nodejs.org/) available locally in addition to `uv`.
+
 ### Releasing a new version
 
 To release a new version, you need to follow these steps:
 
-1. Update the version with `poetry version <version>` and commit the changes. This project follows [Semantic Versioning](http://semver.org/), so the version number should follow the format `<major>.<minor>.<patch>`.
+1. Update the version with `uv version <version>` and commit the changes. This project follows [Semantic Versioning](http://semver.org/), so the version number should follow the format `<major>.<minor>.<patch>`.
 
 2. Create a Github release with the new version number.
 
-3. (Optional) Publish the new version to PyPI with `poetry publish --build`.
+3. (Optional) Publish the new version to PyPI with `uv build && uv publish`.

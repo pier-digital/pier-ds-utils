@@ -1,3 +1,4 @@
+import operator
 import typing
 
 import numpy as np
@@ -84,7 +85,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._column
-        X.loc[:, output_column] = output
+        X[output_column] = output
 
         return X
 
@@ -191,7 +192,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         if self.default_value_ is not None:
             output.fillna(self.default_value_, inplace=True)
 
-        X.loc[:, self.get_output_column()] = output
+        X[self.get_output_column()] = output
 
         return X
 
@@ -291,8 +292,172 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._category_column
-        X.loc[:, output_column] = output
+        X[output_column] = output
 
+        return X
+
+
+_MATH_OPERATIONS = {
+    "addition": operator.add,
+    "subtraction": operator.sub,
+    "multiplication": operator.mul,
+    "division": operator.truediv,
+}
+
+
+class CustomMathOperation(BaseCustomTransformer):
+    _OPERATIONS = _MATH_OPERATIONS
+
+    def __init__(
+        self,
+        operation: str,
+        column_a: str,
+        column_b: str,
+        output_column: str,
+    ):
+        """
+        Transformer to apply a math operation between two columns.
+
+        Parameters
+        ----------
+        operation: str
+            Operation to apply. One of "addition", "subtraction",
+            "multiplication", "division".
+        column_a: str
+            Name of the first operand column.
+        column_b: str
+            Name of the second operand column.
+        output_column: str
+            Name of the output column.
+        """
+        if operation not in self._OPERATIONS:
+            raise ValueError(
+                f"operation must be one of {list(self._OPERATIONS)}, got {operation!r}"
+            )
+
+        self._operation = operation
+        self._column_a = column_a
+        self._column_b = column_b
+        self._output_column = output_column
+
+    @property
+    def operation_(self) -> str:
+        return self._operation
+
+    @property
+    def column_a_(self) -> str:
+        return self._column_a
+
+    @property
+    def column_b_(self) -> str:
+        return self._column_b
+
+    @property
+    def output_column_(self) -> str:
+        return self._output_column
+
+    def get_output_column(self) -> str:
+        return self._output_column
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "operation": self._operation,
+            "column_a": self._column_a,
+            "column_b": self._column_b,
+            "output_column": self._output_column,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        op = self._OPERATIONS[self._operation]
+        X[self.get_output_column()] = op(X[self._column_a], X[self._column_b])
+        return X
+
+
+class CustomMathOperationByConstant(BaseCustomTransformer):
+    _OPERATIONS = _MATH_OPERATIONS
+
+    def __init__(
+        self,
+        operation: str,
+        column: str,
+        constant: typing.Union[int, float],
+        output_column: str,
+        invert_order: bool = False,
+    ):
+        """
+        Transformer to apply a math operation between a column and a constant.
+
+        Parameters
+        ----------
+        operation: str
+            Operation to apply. One of "addition", "subtraction",
+            "multiplication", "division".
+        column: str
+            Name of the operand column.
+        constant: int or float
+            Constant value to apply the operation with.
+        output_column: str
+            Name of the output column.
+        invert_order: bool
+            If True, applies `constant op column` instead of the default
+            `column op constant`. Useful for non-commutative operations
+            (subtraction, division). Defaults to False.
+        """
+        if operation not in self._OPERATIONS:
+            raise ValueError(
+                f"operation must be one of {list(self._OPERATIONS)}, got {operation!r}"
+            )
+
+        self._operation = operation
+        self._column = column
+        self._constant = constant
+        self._output_column = output_column
+        self._invert_order = invert_order
+
+    @property
+    def operation_(self) -> str:
+        return self._operation
+
+    @property
+    def column_(self) -> str:
+        return self._column
+
+    @property
+    def constant_(self) -> typing.Union[int, float]:
+        return self._constant
+
+    @property
+    def output_column_(self) -> str:
+        return self._output_column
+
+    @property
+    def invert_order_(self) -> bool:
+        return self._invert_order
+
+    def get_output_column(self) -> str:
+        return self._output_column
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "operation": self._operation,
+            "column": self._column,
+            "constant": self._constant,
+            "output_column": self._output_column,
+            "invert_order": self._invert_order,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        op = self._OPERATIONS[self._operation]
+        if self._invert_order:
+            X[self.get_output_column()] = op(self._constant, X[self._column])
+        else:
+            X[self.get_output_column()] = op(X[self._column], self._constant)
         return X
 
 

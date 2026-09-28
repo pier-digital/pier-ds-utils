@@ -65,6 +65,29 @@ interval_categorizer_by_category = ds.transformer.CustomIntervalCategorizerByCat
 )
 ```
 
+#### CustomMathOperation
+
+```python
+math_operation = ds.transformer.CustomMathOperation(
+    operation="multiplication",  # also accepts addition, subtraction, division
+    column_a="discrete_col",
+    column_b="numeric_col",
+    output_column="output_col_name",
+)
+```
+
+#### CustomMathOperationByConstant
+
+```python
+math_operation_by_constant = ds.transformer.CustomMathOperationByConstant(
+    operation="multiplication",  # also accepts addition, subtraction, division
+    column="numeric_col",
+    constant=1.1,
+    output_column="output_col_name",
+    invert_order=False,  # set True to compute constant op column instead of column op constant
+)
+```
+
 #### LogTransformer
 
 ```python
@@ -130,6 +153,10 @@ pip install pier-ds-utils
 # or
 
 poetry add pier-ds-utils
+
+# or
+
+uv add pier-ds-utils
 ```
 
 For a specific
@@ -141,6 +168,10 @@ pip install pier-ds-utils@_version_
 # or
 
 poetry add pier-ds-utils@_version_
+
+# or
+
+uv add pier-ds-utils@_version_
 ```
 
 ## Contributing

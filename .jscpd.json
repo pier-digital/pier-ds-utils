@@ -1,0 +1,16 @@
+{
+  "ignore": [
+    "**/.coverage/**",
+    "**/.pytest_cache/**",
+    "**/.ruff_cache/**",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "**/node_modules/**",
+    "**/tests/**",
+    "uv.lock"
+  ],
+  "minLines": 8,
+  "minTokens": 80,
+  "reporters": ["console"],
+  "threshold": 3
+}
