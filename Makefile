@@ -12,6 +12,10 @@ init:
 tests:
 	uv run pytest --cov-report=term-missing:skip-covered --cov=pier_ds_utils tests/ | tee pytest-coverage.txt
 
+.PHONY: performance
+performance:
+	uv run pytest -o addopts="" -m performance tests/ -v -s
+
 .PHONY: lint
 lint:
 	uv run ruff check . $(RUFF_ARGS)

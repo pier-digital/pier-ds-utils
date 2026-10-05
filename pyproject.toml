@@ -1,6 +1,6 @@
 [project]
 name = "pier-ds-utils"
-version = "0.7.0a2"
+version = "0.7.0a3"
 description = "A library for data science teams to avoid code duplication in common tasks involving scikit-learn transformers and estimators."
 authors = [{ name = "Gabriel Guarisa", email = "gabriel.guarisa@pier.digital" }]
 readme = "README.md"
@@ -9,7 +9,7 @@ dependencies = [
     "setuptools>=69.0.3,<70",
     "scikit-learn",
     "pandas",
-    "statsmodels",
+    "statsmodels"
 ]
 
 [dependency-groups]
@@ -24,3 +24,7 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+markers = ["performance: slow timing tests, run with `make performance`"]
+addopts = "-m 'not performance'"

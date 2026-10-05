@@ -24,6 +24,12 @@ make tests
 
 This will run the tests with [pytest](https://docs.pytest.org/en/latest/) and show information about the coverage.
 
+The timing tests for `KModes`/`KPrototypes` are marked `performance` and skipped by default. Run them with:
+
+```bash
+make performance
+```
+
 ### Formatting the code
 
 To look for formatting issues:
