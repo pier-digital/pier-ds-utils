@@ -120,6 +120,18 @@ glm_wrapper = ds.estimator.GLMWrapper(...)
 predict_proba_selector = ds.estimator.PredictProbaSelector(...)
 ```
 
+`ClusterLabelMapper` wraps a clustering estimator and translates the cluster indexes returned by `predict` into string labels:
+
+```python
+mapper = ds.estimator.ClusterLabelMapper(
+    ds.kmodes.KModes(n_clusters=2, random_state=0),
+    cluster_map={0: "low_risk", 1: "high_risk"},
+)
+mapper.fit(df).predict(df)  # array(["low_risk", "high_risk", ...], dtype=object)
+```
+
+Indexes missing from `cluster_map` raise a `ValueError`.
+
 ### Clustering
 
 `KModes` clusters purely categorical data; `KPrototypes` clusters mixed numeric and categorical data. Categorical columns of `KPrototypes` can be given by name (DataFrame input) or by positional index. Missing values are not supported (impute them first); categories not seen during `fit` are accepted by `predict` and simply count as mismatches.

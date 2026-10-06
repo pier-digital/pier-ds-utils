@@ -63,3 +63,63 @@ class PredictProbaSelector(BaseCustomTransformer):
             "model": self.model.get_params(deep=deep) if deep else self.model,
             "column": self.column,
         }
+
+
+class ClusterLabelMapper(BaseCustomTransformer):
+    def __init__(self, estimator: BaseEstimator, cluster_map: typing.Dict[int, str]):
+        """
+        Wraps a clustering estimator and translates the cluster indexes it
+        predicts into human readable labels.
+
+        Parameters
+        ----------
+        estimator : BaseEstimator
+            Estimator whose `predict` returns integer cluster indexes.
+        cluster_map : dict
+            Mapping of cluster index (int) to label (str).
+        """
+        self._check_cluster_map(cluster_map)
+        self.estimator = estimator
+        self.cluster_map = cluster_map
+
+    @staticmethod
+    def _check_cluster_map(cluster_map: typing.Dict[int, str]) -> None:
+        if not isinstance(cluster_map, dict):
+            raise ValueError("cluster_map must be a dictionary.")
+
+        if not cluster_map:
+            raise ValueError("cluster_map cannot be empty.")
+
+        if any(not isinstance(k, (int, np.integer)) for k in cluster_map):
+            raise ValueError("All keys in cluster_map must be integers.")
+
+        if any(not isinstance(v, str) for v in cluster_map.values()):
+            raise ValueError("All values in cluster_map must be strings.")
+
+    def _translate(self, indexes: typing.Any) -> np.ndarray:
+        indexes = np.asarray(indexes)
+        unmapped = sorted(set(indexes.tolist()) - set(self.cluster_map))
+        if unmapped:
+            raise ValueError(f"Cluster indexes missing from cluster_map: {unmapped}")
+
+        return np.array([self.cluster_map[i] for i in indexes.tolist()], dtype=object)
+
+    def fit(self, X, y=None, **fit_params) -> "ClusterLabelMapper":
+        self.estimator.fit(X, y, **fit_params)
+        if hasattr(self.estimator, "labels_"):
+            self._translate(np.unique(self.estimator.labels_))
+        self.fitted_ = True
+        return self
+
+    def predict(self, X, **predict_params) -> np.ndarray:
+        return self._translate(self.estimator.predict(X, **predict_params))
+
+    def fit_predict(self, X, y=None, **fit_params) -> np.ndarray:
+        return self.fit(X, y, **fit_params).predict(X)
+
+    def __getattr__(self, name: str) -> Any:
+        # Only called when normal lookup fails; delegate fitted attributes
+        # (e.g. cluster_centroids_) to the wrapped estimator.
+        if name == "estimator" or name.startswith("__"):
+            raise AttributeError(name)
+        return getattr(self.estimator, name)
