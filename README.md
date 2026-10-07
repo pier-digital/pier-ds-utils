@@ -69,7 +69,7 @@ interval_categorizer_by_category = ds.transformer.CustomIntervalCategorizerByCat
 
 ```python
 math_operation = ds.transformer.CustomMathOperation(
-    operation="multiplication",  # also accepts addition, subtraction, division
+    operation="multiplication",  # also accepts addition, subtraction, division, exponentiation
     column_a="discrete_col",
     column_b="numeric_col",
     output_column="output_col_name",
@@ -80,11 +80,11 @@ math_operation = ds.transformer.CustomMathOperation(
 
 ```python
 math_operation_by_constant = ds.transformer.CustomMathOperationByConstant(
-    operation="multiplication",  # also accepts addition, subtraction, division
+    operation="multiplication",  # also accepts addition, subtraction, division, exponentiation
     column="numeric_col",
     constant=1.1,
     output_column="output_col_name",
-    invert_order=False,  # set True to compute constant op column instead of column op constant
+    invert_order=False,  # set True to compute constant op column instead of column op constant (e.g. constant ** column for exponentiation)
 )
 ```
 

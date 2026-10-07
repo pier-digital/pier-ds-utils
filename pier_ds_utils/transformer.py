@@ -302,6 +302,7 @@ _MATH_OPERATIONS = {
     "subtraction": operator.sub,
     "multiplication": operator.mul,
     "division": operator.truediv,
+    "exponentiation": operator.pow,
 }
 
 
@@ -322,7 +323,7 @@ class CustomMathOperation(BaseCustomTransformer):
         ----------
         operation: str
             Operation to apply. One of "addition", "subtraction",
-            "multiplication", "division".
+            "multiplication", "division", "exponentiation".
         column_a: str
             Name of the first operand column.
         column_b: str
@@ -394,7 +395,7 @@ class CustomMathOperationByConstant(BaseCustomTransformer):
         ----------
         operation: str
             Operation to apply. One of "addition", "subtraction",
-            "multiplication", "division".
+            "multiplication", "division", "exponentiation".
         column: str
             Name of the operand column.
         constant: int or float
@@ -404,7 +405,8 @@ class CustomMathOperationByConstant(BaseCustomTransformer):
         invert_order: bool
             If True, applies `constant op column` instead of the default
             `column op constant`. Useful for non-commutative operations
-            (subtraction, division). Defaults to False.
+            (subtraction, division, exponentiation). For exponentiation,
+            True gives `constant ** column`. Defaults to False.
         """
         if operation not in self._OPERATIONS:
             raise ValueError(

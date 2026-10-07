@@ -305,6 +305,21 @@ def test_custom_math_operation_division():
     assert X["ratio"].tolist() == [5, 4, 10]
 
 
+def test_custom_math_operation_exponentiation():
+    operation = ds.transformer.CustomMathOperation(
+        operation="exponentiation",
+        column_a="a",
+        column_b="b",
+        output_column="power",
+    )
+
+    X = pd.DataFrame({"a": [1, 2, 3], "b": [2, 2, 2]})
+
+    X = operation.fit_transform(X)
+
+    assert X["power"].tolist() == [1, 4, 9]
+
+
 def test_custom_math_operation_invalid_operation():
     with pytest.raises(ValueError):
         ds.transformer.CustomMathOperation(
@@ -466,6 +481,37 @@ def test_custom_math_operation_by_constant_division_inverted():
     X = operation.fit_transform(X)
 
     assert X["ratio"].tolist() == [10, 5, 4]
+
+
+def test_custom_math_operation_by_constant_exponentiation():
+    operation = ds.transformer.CustomMathOperationByConstant(
+        operation="exponentiation",
+        column="a",
+        constant=2,
+        output_column="power",
+    )
+
+    X = pd.DataFrame({"a": [1, 2, 3]})
+
+    X = operation.fit_transform(X)
+
+    assert X["power"].tolist() == [1, 4, 9]
+
+
+def test_custom_math_operation_by_constant_exponentiation_inverted():
+    operation = ds.transformer.CustomMathOperationByConstant(
+        operation="exponentiation",
+        column="a",
+        constant=2,
+        output_column="power",
+        invert_order=True,
+    )
+
+    X = pd.DataFrame({"a": [1, 2, 3]})
+
+    X = operation.fit_transform(X)
+
+    assert X["power"].tolist() == [2, 4, 8]
 
 
 def test_log_transformer():
