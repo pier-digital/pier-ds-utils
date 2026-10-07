@@ -112,6 +112,19 @@ boundaries_transformer = ds.transformer.BoundariesTransformer(
 )
 ```
 
+#### CustomBinarizer
+
+Like scikit-learn's `Binarizer`, but with a configurable condition (`">"`, `">="`, `"="`, `"<"`, `"<="`) and configurable values. Missing values never meet the condition, so they receive `false_value`.
+
+```python
+binarizer = ds.transformer.CustomBinarizer(
+    threshold=100,
+    condition=">=",
+    true_value="high",
+    false_value="low",
+)
+```
+
 
 ### Estimators
 

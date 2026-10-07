@@ -544,3 +544,92 @@ class BoundariesTransformer(BaseCustomTransformer):
         X[X > self._upper_bound] = replacement
 
         return X
+
+
+_BINARIZER_CONDITIONS = {
+    ">": operator.gt,
+    ">=": operator.ge,
+    "=": operator.eq,
+    "<": operator.lt,
+    "<=": operator.le,
+}
+
+
+class CustomBinarizer(BaseCustomTransformer):
+    _CONDITIONS = _BINARIZER_CONDITIONS
+
+    def __init__(
+        self,
+        threshold: float = 0.0,
+        condition: str = ">",
+        true_value: typing.Any = 1,
+        false_value: typing.Any = 0,
+    ):
+        """
+        Transformer to binarize data according to a threshold and a condition.
+
+        Works like scikit-learn's Binarizer, but allows choosing the
+        condition and the values assigned when it is met or not.
+
+        Parameters
+        ----------
+        threshold : float, optional (default=0.0)
+            Value the data is compared against.
+        condition : str, optional (default=">")
+            Condition applied as `X condition threshold`. One of ">", ">=",
+            "=", "<", "<=".
+        true_value : any, optional (default=1)
+            Value assigned where the condition is met.
+        false_value : any, optional (default=0)
+            Value assigned where the condition is not met. Missing values
+            never meet the condition, so they receive this value.
+
+        Returns
+        -------
+        X : DataFrame of shape (n_samples, n_features)
+            Binarized data, with the same index and columns as the input.
+        """
+        if condition not in self._CONDITIONS:
+            raise ValueError(
+                f"condition must be one of {list(self._CONDITIONS)}, got {condition!r}"
+            )
+
+        self._threshold = threshold
+        self._condition = condition
+        self._true_value = true_value
+        self._false_value = false_value
+
+    @property
+    def threshold_(self) -> float:
+        return self._threshold
+
+    @property
+    def condition_(self) -> str:
+        return self._condition
+
+    @property
+    def true_value_(self) -> typing.Any:
+        return self._true_value
+
+    @property
+    def false_value_(self) -> typing.Any:
+        return self._false_value
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "threshold": self._threshold,
+            "condition": self._condition,
+            "true_value": self._true_value,
+            "false_value": self._false_value,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        mask = self._CONDITIONS[self._condition](X, self._threshold)
+        return pd.DataFrame(
+            np.where(mask, self._true_value, self._false_value),
+            index=X.index,
+            columns=X.columns,
+        )

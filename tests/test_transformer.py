@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pier_ds_utils as ds
 import pytest
@@ -657,3 +658,81 @@ def test_boundaries_transformer_with_custom_values():
         9,
         99,
     ]
+
+
+def test_custom_binarizer_default_matches_sklearn():
+    from sklearn.preprocessing import Binarizer
+
+    X = pd.DataFrame({"a": [-1.0, 0.0, 1.0, 2.0], "b": [3.0, 0.0, -2.0, 0.5]})
+
+    result = ds.transformer.CustomBinarizer().fit_transform(X)
+
+    expected = Binarizer(threshold=0.0).fit_transform(X)
+    assert result.to_numpy().tolist() == expected.tolist()
+
+
+@pytest.mark.parametrize(
+    "condition, expected",
+    [
+        (">", [0, 0, 1]),
+        (">=", [0, 1, 1]),
+        ("=", [0, 1, 0]),
+        ("<", [1, 0, 0]),
+        ("<=", [1, 1, 0]),
+    ],
+)
+def test_custom_binarizer_conditions(condition, expected):
+    X = pd.DataFrame({"a": [1, 5, 9]})
+
+    result = ds.transformer.CustomBinarizer(
+        threshold=5, condition=condition
+    ).fit_transform(X)
+
+    assert result["a"].tolist() == expected
+
+
+def test_custom_binarizer_custom_values():
+    X = pd.DataFrame({"a": [1, 5, 9]})
+
+    binarizer = ds.transformer.CustomBinarizer(
+        threshold=5, condition=">=", true_value="high", false_value="low"
+    )
+
+    assert binarizer.fit_transform(X)["a"].tolist() == ["low", "high", "high"]
+
+
+def test_custom_binarizer_invalid_condition():
+    with pytest.raises(ValueError):
+        ds.transformer.CustomBinarizer(condition="!=")
+
+
+def test_custom_binarizer_get_params():
+    binarizer = ds.transformer.CustomBinarizer(
+        threshold=3, condition="<=", true_value=10, false_value=-1
+    )
+
+    assert binarizer.get_params() == {
+        "threshold": 3,
+        "condition": "<=",
+        "true_value": 10,
+        "false_value": -1,
+    }
+
+
+def test_custom_binarizer_nan_gets_false_value():
+    X = pd.DataFrame({"a": [1.0, np.nan, 9.0]})
+
+    result = ds.transformer.CustomBinarizer(threshold=5, condition="<").fit_transform(X)
+
+    assert result["a"].tolist() == [1, 0, 0]
+
+
+def test_custom_binarizer_preserves_index_columns_and_input():
+    X = pd.DataFrame({"a": [1, 9], "b": [9, 1]}, index=[10, 20])
+    original = X.copy()
+
+    result = ds.transformer.CustomBinarizer(threshold=5).fit_transform(X)
+
+    assert result.index.tolist() == [10, 20]
+    assert result.columns.tolist() == ["a", "b"]
+    pd.testing.assert_frame_equal(X, original)
