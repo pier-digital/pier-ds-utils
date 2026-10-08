@@ -787,9 +787,7 @@ def test_custom_rounder(direction, decimals, values, expected):
 
 
 def test_custom_rounder_multiple_columns_nan_and_input_untouched():
-    X = pd.DataFrame(
-        {"a": [1.2, np.nan], "b": [2.01, -0.5]}, index=["i", "j"]
-    )
+    X = pd.DataFrame({"a": [1.2, np.nan], "b": [2.01, -0.5]}, index=["i", "j"])
     original = X.copy()
 
     result = ds.transformer.CustomRounder().fit_transform(X)
