@@ -37,6 +37,7 @@ interval_categorizer = ds.transformer.CustomIntervalCategorizer(
     labels=["gt_67k"],
     default_value="lt_67k",
     output_column="cat_price",
+    output_type="object",  # optional, dtype of the output column (default: "object")
 )
 ```
 

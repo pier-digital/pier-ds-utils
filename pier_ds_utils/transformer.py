@@ -98,6 +98,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         labels: typing.List[typing.Any],
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
+        output_type: typing.Union[str, type] = "object",
     ):
         """
         Custom transformer to categorize a numeric column into intervals.
@@ -116,6 +117,10 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
+        output_type: str or type
+            Dtype of the output column, any value accepted by pandas.Series.astype (e.g. "object", "category",
+            "float", "string"). Defaults to "object". Unmatched values without a default_value stay NaN, so
+            integer types that cannot hold NaN (e.g. "int") will raise.
         """
         if len(intervals) != len(labels):
             raise ValueError("Number of intervals must be the same as number of labels")
@@ -142,6 +147,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         self._labels = labels
         self._default_value = default_value
         self._output_column = output_column
+        self._output_type = output_type
 
     @property
     def column_(self) -> str:
@@ -163,6 +169,10 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
     def output_column_(self) -> str:
         return self._output_column
 
+    @property
+    def output_type_(self) -> typing.Union[str, type]:
+        return self._output_type
+
     def get_output_column(self) -> str:
         return self.output_column_ or self.column_
 
@@ -177,6 +187,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
             "default_value": self.default_value_,
             "output_column": self.output_column_,
             "column": self.column_,
+            "output_type": self.output_type_,
         }
 
     def fit(self, X, y=None):
@@ -192,7 +203,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         if self.default_value_ is not None:
             output.fillna(self.default_value_, inplace=True)
 
-        X[self.get_output_column()] = output
+        X[self.get_output_column()] = output.astype(self.output_type_)
 
         return X
 

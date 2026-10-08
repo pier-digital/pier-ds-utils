@@ -151,6 +151,35 @@ def test_custom_interval_categorizer_get_params():
     assert params["labels"] == labels
     assert params["default_value"] == default_value
     assert params["output_column"] == output_column
+    assert params["output_type"] == "object"
+
+
+def test_custom_interval_categorizer_output_type():
+    X = pd.DataFrame({"price": [1, 5, 20]})
+
+    default = ds.transformer.CustomIntervalCategorizer(
+        column="price", intervals=[(0, 10)], labels=[1.0], default_value=2.0
+    ).fit_transform(X.copy())
+    assert default["price"].dtype == object
+
+    as_float = ds.transformer.CustomIntervalCategorizer(
+        column="price",
+        intervals=[(0, 10)],
+        labels=[1],
+        default_value=2,
+        output_type="float",
+    ).fit_transform(X.copy())
+    assert as_float["price"].dtype == "float64"
+    assert as_float["price"].tolist() == [1.0, 1.0, 2.0]
+
+    as_category = ds.transformer.CustomIntervalCategorizer(
+        column="price",
+        intervals=[(0, 10)],
+        labels=["low"],
+        default_value="high",
+        output_type="category",
+    ).fit_transform(X.copy())
+    assert as_category["price"].dtype == "category"
 
 
 def test_custom_interval_categorizer_by_category():
