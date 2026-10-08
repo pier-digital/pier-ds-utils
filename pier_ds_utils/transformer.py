@@ -474,6 +474,82 @@ class CustomMathOperationByConstant(BaseCustomTransformer):
         return X
 
 
+_ROUNDING_DIRECTIONS = {
+    "up": np.ceil,
+    "down": np.floor,
+    "nearest": np.rint,
+}
+
+
+class CustomRounder(BaseCustomTransformer):
+    _DIRECTIONS = _ROUNDING_DIRECTIONS
+
+    def __init__(
+        self,
+        direction: str = "up",
+        decimals: int = 0,
+    ):
+        """
+        Transformer to round numeric data up, down or to the nearest value.
+
+        Rounds every column it receives, so select the numeric columns to be
+        rounded beforehand (e.g. with a ColumnTransformer).
+
+        Parameters
+        ----------
+        direction: str
+            One of "up" (ceil), "down" (floor) or "nearest" (round). "nearest"
+            rounds halves to the nearest even number (0.5 -> 0, 1.5 -> 2, 2.5 -> 2).
+            Defaults to "up".
+        decimals: int
+            Number of decimal digits to keep. Negative values round to tens,
+            hundreds, etc. Defaults to 0.
+
+        Returns
+        -------
+        X : DataFrame of shape (n_samples, n_features)
+            Rounded float data, with the same index and columns as the input.
+            Missing values are kept as NaN.
+        """
+        if direction not in self._DIRECTIONS:
+            raise ValueError(
+                f"direction must be one of {list(self._DIRECTIONS)}, got {direction!r}"
+            )
+
+        if not isinstance(decimals, int) or isinstance(decimals, bool):
+            raise TypeError(f"decimals must be an int, got {decimals!r}")
+
+        self._direction = direction
+        self._decimals = decimals
+
+    @property
+    def direction_(self) -> str:
+        return self._direction
+
+    @property
+    def decimals_(self) -> int:
+        return self._decimals
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "direction": self._direction,
+            "decimals": self._decimals,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        factor = 10.0**self._decimals
+        # the inner round absorbs float error, e.g. 1.1 * 10 = 11.000000000000002
+        scaled = np.round(np.asarray(X, dtype=float) * factor, 9)
+        return pd.DataFrame(
+            self._DIRECTIONS[self._direction](scaled) / factor,
+            index=X.index,
+            columns=X.columns,
+        )
+
+
 class LogTransformer(BaseCustomTransformer):
     """Calculates the natural logarithm of the input data. This transformer is useful for transforming skewed data into a more normal distribution."""
 

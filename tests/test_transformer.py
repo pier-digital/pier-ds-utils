@@ -765,3 +765,52 @@ def test_custom_binarizer_preserves_index_columns_and_input():
     assert result.index.tolist() == [10, 20]
     assert result.columns.tolist() == ["a", "b"]
     pd.testing.assert_frame_equal(X, original)
+
+
+@pytest.mark.parametrize(
+    "direction, decimals, values, expected",
+    [
+        ("up", 0, [1.2, -1.2, 2.0], [2.0, -1.0, 2.0]),
+        ("down", 0, [1.2, -1.2, 2.0], [1.0, -2.0, 2.0]),
+        ("nearest", 0, [1.2, -1.2, 1.7], [1.0, -1.0, 2.0]),
+        ("nearest", 0, [0.5, 1.5, 2.5], [0.0, 2.0, 2.0]),
+        ("up", 1, [1.11, 1.1, 1.19], [1.2, 1.1, 1.2]),
+        ("down", 2, [1.119, 1.1], [1.11, 1.1]),
+        ("up", -2, [1234.5], [1300.0]),
+        ("down", -2, [1234.5], [1200.0]),
+    ],
+)
+def test_custom_rounder(direction, decimals, values, expected):
+    rounder = ds.transformer.CustomRounder(direction=direction, decimals=decimals)
+    X = rounder.fit_transform(pd.DataFrame({"x": values}))
+    assert X["x"].tolist() == pytest.approx(expected)
+
+
+def test_custom_rounder_multiple_columns_nan_and_input_untouched():
+    X = pd.DataFrame(
+        {"a": [1.2, np.nan], "b": [2.01, -0.5]}, index=["i", "j"]
+    )
+    original = X.copy()
+
+    result = ds.transformer.CustomRounder().fit_transform(X)
+
+    assert result.index.tolist() == ["i", "j"]
+    assert result.columns.tolist() == ["a", "b"]
+    assert result["a"].tolist()[0] == 2.0
+    assert np.isnan(result["a"].tolist()[1])
+    assert result["b"].tolist() == [3.0, -0.0]
+    pd.testing.assert_frame_equal(X, original)
+
+
+def test_custom_rounder_invalid_params():
+    with pytest.raises(ValueError):
+        ds.transformer.CustomRounder(direction="sideways")
+    with pytest.raises(TypeError):
+        ds.transformer.CustomRounder(decimals=1.5)
+    with pytest.raises(TypeError):
+        ds.transformer.CustomRounder(decimals=True)
+
+
+def test_custom_rounder_get_params():
+    rounder = ds.transformer.CustomRounder(direction="down", decimals=2)
+    assert rounder.get_params() == {"direction": "down", "decimals": 2}

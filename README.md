@@ -113,6 +113,17 @@ boundaries_transformer = ds.transformer.BoundariesTransformer(
 )
 ```
 
+#### CustomRounder
+
+Rounds a numeric column up (`"up"`, ceil), down (`"down"`, floor) or to the nearest value (`"nearest"`, halves go to the nearest even number), keeping the chosen number of decimal digits. Negative `decimals` round to tens, hundreds, etc. It rounds every column it receives, so select the numeric columns beforehand.
+
+```python
+rounder = ds.transformer.CustomRounder(
+    direction="up",
+    decimals=1,
+)
+```
+
 #### CustomBinarizer
 
 Like scikit-learn's `Binarizer`, but with a configurable condition (`">"`, `">="`, `"="`, `"<"`, `"<="`) and configurable values. Missing values never meet the condition, so they receive `false_value`.
