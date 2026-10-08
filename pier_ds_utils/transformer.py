@@ -1,3 +1,4 @@
+import operator
 import typing
 
 import numpy as np
@@ -84,7 +85,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._column
-        X.loc[:, output_column] = output
+        X[output_column] = output
 
         return X
 
@@ -97,6 +98,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         labels: typing.List[typing.Any],
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
+        output_type: typing.Union[str, type] = "object",
     ):
         """
         Custom transformer to categorize a numeric column into intervals.
@@ -115,6 +117,10 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
+        output_type: str or type
+            Dtype of the output column, any value accepted by pandas.Series.astype (e.g. "object", "category",
+            "float", "string"). Defaults to "object". Unmatched values without a default_value stay NaN, so
+            integer types that cannot hold NaN (e.g. "int") will raise.
         """
         if len(intervals) != len(labels):
             raise ValueError("Number of intervals must be the same as number of labels")
@@ -141,6 +147,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         self._labels = labels
         self._default_value = default_value
         self._output_column = output_column
+        self._output_type = output_type
 
     @property
     def column_(self) -> str:
@@ -162,6 +169,10 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
     def output_column_(self) -> str:
         return self._output_column
 
+    @property
+    def output_type_(self) -> typing.Union[str, type]:
+        return self._output_type
+
     def get_output_column(self) -> str:
         return self.output_column_ or self.column_
 
@@ -176,6 +187,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
             "default_value": self.default_value_,
             "output_column": self.output_column_,
             "column": self.column_,
+            "output_type": self.output_type_,
         }
 
     def fit(self, X, y=None):
@@ -191,7 +203,7 @@ class CustomIntervalCategorizer(BaseCustomTransformer):
         if self.default_value_ is not None:
             output.fillna(self.default_value_, inplace=True)
 
-        X.loc[:, self.get_output_column()] = output
+        X[self.get_output_column()] = output.astype(self.output_type_)
 
         return X
 
@@ -291,9 +303,251 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._category_column
-        X.loc[:, output_column] = output
+        X[output_column] = output
 
         return X
+
+
+_MATH_OPERATIONS = {
+    "addition": operator.add,
+    "subtraction": operator.sub,
+    "multiplication": operator.mul,
+    "division": operator.truediv,
+    "exponentiation": operator.pow,
+}
+
+
+class CustomMathOperation(BaseCustomTransformer):
+    _OPERATIONS = _MATH_OPERATIONS
+
+    def __init__(
+        self,
+        operation: str,
+        column_a: str,
+        column_b: str,
+        output_column: str,
+    ):
+        """
+        Transformer to apply a math operation between two columns.
+
+        Parameters
+        ----------
+        operation: str
+            Operation to apply. One of "addition", "subtraction",
+            "multiplication", "division", "exponentiation".
+        column_a: str
+            Name of the first operand column.
+        column_b: str
+            Name of the second operand column.
+        output_column: str
+            Name of the output column.
+        """
+        if operation not in self._OPERATIONS:
+            raise ValueError(
+                f"operation must be one of {list(self._OPERATIONS)}, got {operation!r}"
+            )
+
+        self._operation = operation
+        self._column_a = column_a
+        self._column_b = column_b
+        self._output_column = output_column
+
+    @property
+    def operation_(self) -> str:
+        return self._operation
+
+    @property
+    def column_a_(self) -> str:
+        return self._column_a
+
+    @property
+    def column_b_(self) -> str:
+        return self._column_b
+
+    @property
+    def output_column_(self) -> str:
+        return self._output_column
+
+    def get_output_column(self) -> str:
+        return self._output_column
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "operation": self._operation,
+            "column_a": self._column_a,
+            "column_b": self._column_b,
+            "output_column": self._output_column,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        op = self._OPERATIONS[self._operation]
+        X[self.get_output_column()] = op(X[self._column_a], X[self._column_b])
+        return X
+
+
+class CustomMathOperationByConstant(BaseCustomTransformer):
+    _OPERATIONS = _MATH_OPERATIONS
+
+    def __init__(
+        self,
+        operation: str,
+        column: str,
+        constant: typing.Union[int, float],
+        output_column: str,
+        invert_order: bool = False,
+    ):
+        """
+        Transformer to apply a math operation between a column and a constant.
+
+        Parameters
+        ----------
+        operation: str
+            Operation to apply. One of "addition", "subtraction",
+            "multiplication", "division", "exponentiation".
+        column: str
+            Name of the operand column.
+        constant: int or float
+            Constant value to apply the operation with.
+        output_column: str
+            Name of the output column.
+        invert_order: bool
+            If True, applies `constant op column` instead of the default
+            `column op constant`. Useful for non-commutative operations
+            (subtraction, division, exponentiation). For exponentiation,
+            True gives `constant ** column`. Defaults to False.
+        """
+        if operation not in self._OPERATIONS:
+            raise ValueError(
+                f"operation must be one of {list(self._OPERATIONS)}, got {operation!r}"
+            )
+
+        self._operation = operation
+        self._column = column
+        self._constant = constant
+        self._output_column = output_column
+        self._invert_order = invert_order
+
+    @property
+    def operation_(self) -> str:
+        return self._operation
+
+    @property
+    def column_(self) -> str:
+        return self._column
+
+    @property
+    def constant_(self) -> typing.Union[int, float]:
+        return self._constant
+
+    @property
+    def output_column_(self) -> str:
+        return self._output_column
+
+    @property
+    def invert_order_(self) -> bool:
+        return self._invert_order
+
+    def get_output_column(self) -> str:
+        return self._output_column
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "operation": self._operation,
+            "column": self._column,
+            "constant": self._constant,
+            "output_column": self._output_column,
+            "invert_order": self._invert_order,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        op = self._OPERATIONS[self._operation]
+        if self._invert_order:
+            X[self.get_output_column()] = op(self._constant, X[self._column])
+        else:
+            X[self.get_output_column()] = op(X[self._column], self._constant)
+        return X
+
+
+_ROUNDING_DIRECTIONS = {
+    "up": np.ceil,
+    "down": np.floor,
+    "nearest": np.rint,
+}
+
+
+class CustomRounder(BaseCustomTransformer):
+    _DIRECTIONS = _ROUNDING_DIRECTIONS
+
+    def __init__(
+        self,
+        direction: str = "up",
+        decimals: int = 0,
+    ):
+        """
+        Transformer to round numeric data up, down or to the nearest value.
+
+        Rounds every column it receives, so select the numeric columns to be
+        rounded beforehand (e.g. with a ColumnTransformer).
+
+        Parameters
+        ----------
+        direction: str
+            One of "up" (ceil), "down" (floor) or "nearest" (round). "nearest"
+            rounds halves to the nearest even number (0.5 -> 0, 1.5 -> 2, 2.5 -> 2).
+            Defaults to "up".
+        decimals: int
+            Number of decimal digits to keep. Negative values round to tens,
+            hundreds, etc. Defaults to 0.
+
+        Returns
+        -------
+        X : DataFrame of shape (n_samples, n_features)
+            Rounded float data, with the same index and columns as the input.
+            Missing values are kept as NaN.
+        """
+        if direction not in self._DIRECTIONS:
+            raise ValueError(
+                f"direction must be one of {list(self._DIRECTIONS)}, got {direction!r}"
+            )
+
+        if not isinstance(decimals, int) or isinstance(decimals, bool):
+            raise TypeError(f"decimals must be an int, got {decimals!r}")
+
+        self._direction = direction
+        self._decimals = decimals
+
+    @property
+    def direction_(self) -> str:
+        return self._direction
+
+    @property
+    def decimals_(self) -> int:
+        return self._decimals
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "direction": self._direction,
+            "decimals": self._decimals,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        factor = 10.0**self._decimals
+        # the inner round absorbs float error, e.g. 1.1 * 10 = 11.000000000000002
+        scaled = np.round(np.asarray(X, dtype=float) * factor, 9)
+        return pd.DataFrame(
+            self._DIRECTIONS[self._direction](scaled) / factor,
+            index=X.index,
+            columns=X.columns,
+        )
 
 
 class LogTransformer(BaseCustomTransformer):
@@ -377,3 +631,92 @@ class BoundariesTransformer(BaseCustomTransformer):
         X[X > self._upper_bound] = replacement
 
         return X
+
+
+_BINARIZER_CONDITIONS = {
+    ">": operator.gt,
+    ">=": operator.ge,
+    "=": operator.eq,
+    "<": operator.lt,
+    "<=": operator.le,
+}
+
+
+class CustomBinarizer(BaseCustomTransformer):
+    _CONDITIONS = _BINARIZER_CONDITIONS
+
+    def __init__(
+        self,
+        threshold: float = 0.0,
+        condition: str = ">",
+        true_value: typing.Any = 1,
+        false_value: typing.Any = 0,
+    ):
+        """
+        Transformer to binarize data according to a threshold and a condition.
+
+        Works like scikit-learn's Binarizer, but allows choosing the
+        condition and the values assigned when it is met or not.
+
+        Parameters
+        ----------
+        threshold : float, optional (default=0.0)
+            Value the data is compared against.
+        condition : str, optional (default=">")
+            Condition applied as `X condition threshold`. One of ">", ">=",
+            "=", "<", "<=".
+        true_value : any, optional (default=1)
+            Value assigned where the condition is met.
+        false_value : any, optional (default=0)
+            Value assigned where the condition is not met. Missing values
+            never meet the condition, so they receive this value.
+
+        Returns
+        -------
+        X : DataFrame of shape (n_samples, n_features)
+            Binarized data, with the same index and columns as the input.
+        """
+        if condition not in self._CONDITIONS:
+            raise ValueError(
+                f"condition must be one of {list(self._CONDITIONS)}, got {condition!r}"
+            )
+
+        self._threshold = threshold
+        self._condition = condition
+        self._true_value = true_value
+        self._false_value = false_value
+
+    @property
+    def threshold_(self) -> float:
+        return self._threshold
+
+    @property
+    def condition_(self) -> str:
+        return self._condition
+
+    @property
+    def true_value_(self) -> typing.Any:
+        return self._true_value
+
+    @property
+    def false_value_(self) -> typing.Any:
+        return self._false_value
+
+    def get_params(self, deep: bool = True) -> dict:
+        return {
+            "threshold": self._threshold,
+            "condition": self._condition,
+            "true_value": self._true_value,
+            "false_value": self._false_value,
+        }
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        mask = self._CONDITIONS[self._condition](X, self._threshold)
+        return pd.DataFrame(
+            np.where(mask, self._true_value, self._false_value),
+            index=X.index,
+            columns=X.columns,
+        )
