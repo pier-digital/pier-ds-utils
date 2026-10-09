@@ -5,6 +5,32 @@ import pytest
 from sklearn.compose import ColumnTransformer
 
 
+def test_custom_discrete_categorizer_output_type():
+    X = pd.DataFrame({"gender": ["M", "F", "x"]})
+    default = ds.transformer.CustomDiscreteCategorizer(
+        column="gender",
+        categories=[["M"]],
+        labels=[1],
+        default_value=0,
+        output_column="d",
+    )
+    assert default.output_type_ == "object"
+    assert default.fit_transform(X.copy())["d"].dtype == object
+
+    typed = ds.transformer.CustomDiscreteCategorizer(
+        column="gender",
+        categories=[["M"]],
+        labels=[1],
+        default_value=0,
+        output_column="d",
+        output_type="float64",
+    )
+    assert typed.get_params()["output_type"] == "float64"
+    out = typed.fit_transform(X.copy())["d"]
+    assert out.dtype == np.float64
+    assert out.tolist() == [1.0, 0.0, 0.0]
+
+
 def test_custom_discrete_categorizer():
     categorizer = ds.transformer.CustomDiscreteCategorizer(
         column="gender",
@@ -180,6 +206,35 @@ def test_custom_interval_categorizer_output_type():
         output_type="category",
     ).fit_transform(X.copy())
     assert as_category["price"].dtype == "category"
+
+
+def test_custom_interval_categorizer_by_category_output_type():
+    def build(**kwargs):
+        return ds.transformer.CustomIntervalCategorizerByCategory(
+            category_column="brand",
+            interval_categorizers={
+                "apple": ds.transformer.CustomIntervalCategorizer(
+                    column="price", intervals=[(0, 10)], labels=[1]
+                ),
+            },
+            default_categorizer=ds.transformer.CustomIntervalCategorizer(
+                column="price", intervals=[(0, 10)], labels=[2]
+            ),
+            output_column="out",
+            **kwargs,
+        )
+
+    X = pd.DataFrame({"brand": ["apple", "other"], "price": [5, 5]})
+
+    default = build()
+    assert default.output_type_ == "object"
+    assert default.fit_transform(X.copy())["out"].dtype == object
+
+    typed = build(output_type="float64")
+    assert typed.get_params()["output_type"] == "float64"
+    out = typed.fit_transform(X.copy())["out"]
+    assert out.dtype == np.float64
+    assert out.tolist() == [1.0, 2.0]
 
 
 def test_custom_interval_categorizer_by_category():
