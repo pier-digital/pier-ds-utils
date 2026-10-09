@@ -19,6 +19,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
         labels: typing.List[typing.Any],
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
+        output_type: typing.Union[str, type] = "object",
     ):
         """
         Transformer to categorize a column into custom categories.
@@ -35,6 +36,10 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
+        output_type: str or type
+            Dtype of the output column, any value accepted by pandas.Series.astype (e.g. "object", "category",
+            "float64", "int"). Defaults to "object". Unmatched values without a default_value stay NaN, so
+            integer types that cannot hold NaN (e.g. "int") will raise.
         """
         if len(categories) != len(labels):
             raise ValueError(
@@ -50,6 +55,11 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
         self._labels = labels
         self._default_value = default_value
         self._output_column = output_column
+        self._output_type = output_type
+
+    @property
+    def output_type_(self) -> typing.Union[str, type]:
+        return self._output_type
 
     @property
     def categories_(self) -> typing.List[typing.List[typing.Any]]:
@@ -69,6 +79,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             "labels": self.labels_,
             "default_value": self._default_value,
             "output_column": self._output_column,
+            "output_type": self._output_type,
         }
 
     def fit(self, X, y=None):
@@ -85,7 +96,7 @@ class CustomDiscreteCategorizer(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._column
-        X[output_column] = output
+        X[output_column] = output.astype(self._output_type)
 
         return X
 
@@ -216,6 +227,7 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
         default_categorizer: typing.Optional[CustomIntervalCategorizer] = None,
         default_value: typing.Any = None,
         output_column: typing.Optional[str] = None,
+        output_type: typing.Union[str, type] = "object",
     ):
         """
         Custom transformer to categorize a numeric column into intervals given a categorical column.
@@ -233,6 +245,10 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             Value to be used for missing values. If None, missing values will be kept as NaN.
         output_column: str
             Name of the output column. If None, the original column will be overwritten.
+        output_type: str or type
+            Dtype of the output column, any value accepted by pandas.Series.astype (e.g. "object", "category",
+            "float64", "int"). Defaults to "object". Unmatched values without a default_value stay NaN, so
+            integer types that cannot hold NaN (e.g. "int") will raise.
         """
         if not isinstance(interval_categorizers, dict):
             raise TypeError("interval_categorizers must be a dict")
@@ -251,6 +267,11 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
         self._default_categorizer = default_categorizer
         self._default_value = default_value
         self._output_column = output_column
+        self._output_type = output_type
+
+    @property
+    def output_type_(self) -> typing.Union[str, type]:
+        return self._output_type
 
     @property
     def category_column_(self) -> str:
@@ -275,6 +296,7 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             "default_categorizer": self.default_categorizer_,
             "default_value": self._default_value,
             "output_column": self._output_column,
+            "output_type": self._output_type,
         }
 
     def fit(self, X, y=None):
@@ -303,7 +325,7 @@ class CustomIntervalCategorizerByCategory(BaseCustomTransformer):
             output.fillna(self._default_value, inplace=True)
 
         output_column = self._output_column or self._category_column
-        X[output_column] = output
+        X[output_column] = output.astype(self._output_type)
 
         return X
 
